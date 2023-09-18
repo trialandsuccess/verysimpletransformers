@@ -1,0 +1,11 @@
+outputs
+dev
+.*
+*.vst
+*.dill
+cache*
+*.bak
+runs/
+venv*
+*.pyc
+__*
