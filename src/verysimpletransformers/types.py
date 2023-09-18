@@ -1,5 +1,14 @@
 import typing
 
+
+class DummyModel:
+    def predict(self, target: str | list[str], **__):
+        if isinstance(target, list):
+            return [self.predict(_) for _ in target]
+
+        return target[::-1]
+
+
 if typing.TYPE_CHECKING:
     from simpletransformers.classification import (
         ClassificationModel,
@@ -29,4 +38,5 @@ if typing.TYPE_CHECKING:
         | RetrievalModel
         | Seq2SeqModel
         | T5Model
+        | DummyModel
     )
