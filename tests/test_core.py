@@ -8,7 +8,8 @@ import logging
 import dill
 
 from src.verysimpletransformers.core import from_vst, to_vst, write_bundle
-from src.verysimpletransformers.metadata_schema import get_version, MetaHeader, Metadata
+from src.verysimpletransformers.versioning import get_version
+from src.verysimpletransformers.metadata_schema import MetaHeader, Metadata
 from src.verysimpletransformers.types import DummyModel
 
 logging.basicConfig(level=logging.INFO)
@@ -89,4 +90,4 @@ def test_backwards_compat():
     assert hasattr(new_model, 'predict')
     assert not hasattr(new_model, 'predictx')
 
-    assert new_model.predict("something") == "gnihtemos"
+    assert new_model.predict("something") == "gnihtemos" == model.predict("something") == model.predict(["something"])[0]

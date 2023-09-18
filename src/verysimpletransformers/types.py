@@ -1,15 +1,38 @@
+"""
+Mostly for mypy (and pytest).
+"""
+
 import typing
 
 
 class DummyModel:
-    def predict(self, target: str | list[str], **__):
+    """
+    Replacement for actual (big) ML model, useful for pytesting.
+    """
+
+    @typing.overload
+    def predict(self, target: str, **__: typing.Any) -> str:  # pragma: no cover
+        """
+        If you enter a single input, you get a single output.
+        """
+
+    @typing.overload
+    def predict(self, target: list[str], **__: typing.Any) -> list[str]:  # pragma: no cover
+        """
+        If you enter a list of inputs, you get a list of outputs.
+        """
+
+    def predict(self, target: str | list[str], **__: typing.Any) -> str | list[str]:
+        """
+        Simulate a machine learning response by just returning a reversed echo of the input.
+        """
         if isinstance(target, list):
             return [self.predict(_) for _ in target]
 
         return target[::-1]
 
 
-if typing.TYPE_CHECKING:
+if typing.TYPE_CHECKING:  # pragma: no cover
     from simpletransformers.classification import (
         ClassificationModel,
         MultiLabelClassificationModel,

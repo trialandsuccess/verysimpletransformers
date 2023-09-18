@@ -1,59 +1,57 @@
-import typing
-import warnings
-from collections import defaultdict
+"""
+Versioned Metadata classes.
+"""
 
 from configuraptor import BinaryConfig, BinaryField
 
-VERSIONS = defaultdict(dict)
-
-T = typing.TypeVar("T")
-
-
-def define_version(version_no: int) -> typing.Callable[[T], T]:
-    def wraps(cls):
-        VERSIONS[cls.__name__][version_no] = cls
-        cls.__version__ = version_no
-        return cls
-
-    return wraps
-
-
-def _get_version(cls: T, version="latest") -> T:
-    versions = VERSIONS[cls.__name__]
-    return max(versions) if version == "latest" else versions[version]
-
-
-def get_version(cls: T, version: int | typing.Literal["latest"] = "latest") -> T | None:
-    try:
-        return _get_version(cls, version)
-    except Exception as e:
-        if version != "latest":
-            warnings.warn(f"Specific version {version} not available! Using latest.", source=e)
-            return _get_version(cls, "latest")
+from .versioning import define_version
 
 
 class Version(BinaryConfig):
+    """
+    Package version split to binary shorts to save storage.
+    """
+
     major = BinaryField(int, format="H")
     minor = BinaryField(int, format="H")
     patch = BinaryField(int, format="H")
 
-    def __str__(self):
+    def __repr__(self) -> str:
+        """
+        Pretty representation of the version.
+        """
         return f"Version<{self.major}.{self.minor}.{self.patch}>"
 
 
 @define_version(0)
 class MetaHeader(BinaryConfig):
+    """
+    Deprecated.
+    """
+
     welcome_text = BinaryField(str, length=16)
 
 
 @define_version(1)
-class MetaHeader(BinaryConfig):
+class MetaHeader(BinaryConfig):  # type: ignore
+    """
+    A .vst file has some meta info stored in it.
+
+    Welcome text is simply for users trying to cat/open the file, it contains some simple instructions on how to use it.
+    Simple Transformers and Transformers versions are stored, and if the version differs too much from the installed
+        version, a warning can be shown. We will still attempt to load the model, since this might still be possible.
+    Compression level is stored, but zlib can decompress without it.
+    """
+
     welcome_text = BinaryField(str, length=256)
     simple_transformers_version = BinaryField(Version)
     transformers_version = BinaryField(Version)
     compression_level = BinaryField(int, format="H")
 
     def __repr__(self) -> str:
+        """
+        Pretty representation of the meta data.
+        """
         result = "MetaHeader<"
         for name, field in self._fields.items():
             value = getattr(self, name)
@@ -62,8 +60,12 @@ class MetaHeader(BinaryConfig):
 
 
 class Metadata(BinaryConfig):
-    # don't touch this!
-    # MetaHeader can be versioned but for backwards compatiblity we assume this stays the same!
+    """
+    MetaHeader can be versioned but for backwards compatiblity we assume this stays the same!
+
+    !!! don't touch this !!!
+    """
+
     meta_version = BinaryField(int, format="H")
     meta_length = BinaryField(int, format="H")
     content_length = BinaryField(int, format="Q")

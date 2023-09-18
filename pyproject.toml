@@ -68,7 +68,7 @@ directory = "src"
 include = []
 exclude = []
 # 'all':
-stop-after-first-failure = false
+stop-after-first-failure = true
 # pytest:
 coverage = 100
 badge = true
@@ -140,7 +140,8 @@ unfixable = [
 extend-exclude = ["*.bak/", "venv*/"]
 
 ignore = [
-    "RUF013" # implicit Optional
+    "RUF013", # implicit Optional
+    "F811", # redefinition of unused class: feature of @define_version(int)
 ]
 
 [tool.bandit]
