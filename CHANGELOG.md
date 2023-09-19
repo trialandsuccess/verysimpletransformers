@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.0-beta.2 (2023-09-19)
+
+### Fix
+
+* When going from CUDA to CPU, it shouldn't crash anymore ([`9253aec`](https://github.com/trialandsuccess/verysimpletransformers/commit/9253aec866cea3f1480cce5a7c99435eeffd22c6))
+
 ## v0.1.0-beta.1 (2023-09-19)
 
 ### Feature
