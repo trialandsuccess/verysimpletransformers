@@ -2,7 +2,7 @@
 import typer
 from configuraptor.singleton import Singleton
 from rich import print
-from su6.core import warn, Verbosity, state, DEFAULT_VERBOSITY
+from su6.core import warn, Verbosity, state, DEFAULT_VERBOSITY  # todo: replace these
 from typing_extensions import Never
 from .__about__ import __version__
 

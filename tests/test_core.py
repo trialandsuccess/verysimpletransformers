@@ -65,7 +65,6 @@ def test_bundle():
     assert hasattr(new_model, 'predict')
     assert not hasattr(new_model, 'predictx')
 
-
 def test_backwards_compat():
     v0_metadata = get_version(MetaHeader, 0)()
     v0_metadata.welcome_text = "Welcome to VST!"

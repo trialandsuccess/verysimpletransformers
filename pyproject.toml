@@ -28,6 +28,7 @@ dependencies = [
     "simpletransformers",
     "torch",
     "configuraptor >= 1.17",
+    "tqdm",
 ]
 
 [project.optional-dependencies]
