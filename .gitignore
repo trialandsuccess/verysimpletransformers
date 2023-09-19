@@ -8,4 +8,5 @@ cache*
 runs/
 venv*
 *.pyc
-__*
+dist/
+htmlcov/
