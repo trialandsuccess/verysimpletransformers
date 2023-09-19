@@ -1,7 +1,7 @@
 """
 Core functionality of this library.
 """
-
+import io
 import struct
 import sys
 import typing
@@ -9,6 +9,8 @@ import zlib
 from io import BytesIO
 from pathlib import Path
 
+import torch
+from dill import Unpickler
 from tqdm import tqdm
 import dill  # nosec
 
@@ -80,7 +82,21 @@ def to_vst(
 bundle = to_vst
 
 
+class CudaUnpickler(Unpickler):
+    def find_class(self, module, name):
+        if module == 'torch.storage' and name == '_load_from_bytes':
+            return lambda b: torch.load(io.BytesIO(b), map_location='cpu') # todo: dynamic map_location
+        else:
+            return super().find_class(module, name)
+
+    @classmethod
+    def loads(cls, data: bytes) -> typing.Any:
+        return cls(io.BytesIO(data)).load()
+
 def _from_vst(open_file: typing.BinaryIO) -> "AllSimpletransformersModels":
+    # todo: currently, cuda is always converted to CPU.
+    #   this should be 1. selectable by the user and/or 2. some based on cuda.is_available().
+    #   cuda info should also be stored in the metadata (available + enabled)
     with tqdm(total=100) as progress:
         progress.update(10)
         next(open_file)  # skip first line (hashbang)
@@ -100,7 +116,14 @@ def _from_vst(open_file: typing.BinaryIO) -> "AllSimpletransformersModels":
 
         pickled = zlib.decompress(pickled)
         progress.update(30)
-        result = dill.loads(pickled)  # nosec
+
+        # load + fix cuda (pt1):
+        result: "AllSimpletransformersModels" = CudaUnpickler.loads(pickled)
+
+        # fix cuda (pt2):
+        result.device = "cpu"
+
+        # result = dill.loads(pickled)  # nosec
         progress.update(20)
 
     return result
@@ -110,7 +133,6 @@ def from_vst(input_file: str | Path | typing.BinaryIO) -> "AllSimpletransformers
     """
     Given a file path-like object, load the Simple Transformers model back into memory.
     """
-    # todo: deal with cuda *maybe* available
     print('Starting load', file=sys.stderr)
 
     with as_binaryio(input_file) as f:
