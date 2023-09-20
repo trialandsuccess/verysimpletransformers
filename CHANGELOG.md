@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.0-beta.3 (2023-09-20)
+
+### Feature
+
+* **pickle:** Allow choosing a device (cpu or cuda) ([`186d15c`](https://github.com/trialandsuccess/verysimpletransformers/commit/186d15c88cee2c99d45f1bee3b743d2210be58f1))
+
 ## v0.1.0-beta.2 (2023-09-19)
 
 ### Fix
