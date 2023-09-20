@@ -44,8 +44,15 @@ class MetaHeader(BinaryConfig):  # type: ignore
     """
 
     welcome_text = BinaryField(str, length=256)
-    simple_transformers_version = BinaryField(Version)
+
     transformers_version = BinaryField(Version)
+    simpletransformers_version = BinaryField(Version)
+    verysimpletransformers_version = BinaryField(Version)
+
+    torch_version = BinaryField(str, length=16)  # includes cpu/cuda so store as str
+    cuda_available = BinaryField(bool)
+    device = BinaryField(str, length=8)
+
     compression_level = BinaryField(int, format="H")
 
     def __repr__(self) -> str:

@@ -77,6 +77,6 @@ def main(
         show_config_callback()
     elif version:
         version_callback()
-    elif not ctx.invoked_subcommand:
-        warn("Missing subcommand. Try `su6 --help` for more info.")
+    elif not ctx.invoked_subcommand:  # pragma: no cover
+        warn("Missing subcommand. Try `vst --help` for more info.")
     # else: just continue

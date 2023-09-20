@@ -1,20 +1,77 @@
+import io
 import zlib
 from pathlib import Path
 
+import pytest
 import torch.cuda
+from configuraptor import asbytes
 from simpletransformers.classification import ClassificationModel, ClassificationArgs
 import pandas as pd
 import logging
 import dill
 
-from src.verysimpletransformers.core import from_vst, to_vst, write_bundle
+from src.verysimpletransformers.core import from_vst, to_vst, write_bundle, run_metadata_checks
+from src.verysimpletransformers.metadata import get_metadata, compare_versions
 from src.verysimpletransformers.versioning import get_version
-from src.verysimpletransformers.metadata_schema import MetaHeader, Metadata
+from src.verysimpletransformers.metadata_schema import MetaHeader, Metadata, Version
 from src.verysimpletransformers.types import DummyModel
 
 logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(logging.WARNING)
+
+
+def test_metadata():
+    valid_meta = get_metadata(0, 0, "cpu").meta_header
+
+    assert "MetaHeader<" in repr(valid_meta)
+
+    valid_meta = asbytes(valid_meta)
+    meta_len = len(valid_meta)
+    valid_meta = io.BytesIO(valid_meta)
+    assert run_metadata_checks(valid_meta, meta_len) is None
+
+    with pytest.warns(BytesWarning):
+        # invalid length-meta combi leads to Byteswarning
+        run_metadata_checks(valid_meta, 20)
+
+
+def test_version():
+    v = Version()
+
+    v.major = 1
+    v.minor = 2
+    v.patch = 3
+
+    v2 = Version()
+
+    v2.major = 1
+    v2.minor = 3
+    v2.patch = 3
+
+    v3 = Version()
+
+    v3.major = 2
+    v3.minor = 3
+    v3.patch = 3
+
+    v4 = Version()
+
+    v4.major = 1
+    v4.minor = 2
+    v4.patch = 31
+
+    assert repr(v) == "Version<1.2.3>"
+
+    compare_versions('same', v, None)  # missing one
+    compare_versions('same', v, v)  # same, no issue
+    compare_versions("patch", v, v4)  # patch change
+
+    with pytest.warns(UserWarning):
+        compare_versions('minor', v, v3)  # major change
+
+    with pytest.warns(UserWarning):
+        compare_versions('minor', v, v2)  # minor change
 
 
 def test_bundle():
@@ -65,6 +122,7 @@ def test_bundle():
     assert hasattr(new_model, 'predict')
     assert not hasattr(new_model, 'predictx')
 
+
 def test_backwards_compat():
     v0_metadata = get_version(MetaHeader, 0)()
     v0_metadata.welcome_text = "Welcome to VST!"
@@ -89,4 +147,5 @@ def test_backwards_compat():
     assert hasattr(new_model, 'predict')
     assert not hasattr(new_model, 'predictx')
 
-    assert new_model.predict("something") == "gnihtemos" == model.predict("something") == model.predict(["something"])[0]
+    assert new_model.predict("something") == "gnihtemos" == model.predict("something") == model.predict(["something"])[
+        0]

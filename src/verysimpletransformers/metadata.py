@@ -4,11 +4,14 @@ Functions to deal with metadata of `.vst` files.
 
 import re
 import sys
+import warnings
 
+import torch
 import transformers
 from plumbum import local
 from plumbum.cmd import grep
 
+from .__about__ import __version__
 from .metadata_schema import Metadata, MetaHeader, Version
 
 
@@ -17,9 +20,30 @@ def as_version(version_str: str) -> Version:
     Convert a version string into a binary Version object.
     """
     version = Version()
+    version_str = version_str.split("-")[0].split("+")[0]  # remove extra's like `-beta` or `+cpu`.
     version.major, version.minor, version.patch = (int(_) for _ in version_str.split("."))
 
     return version
+
+
+def compare_versions(pkg: str, version1: Version | None, version2: Version | None) -> None:
+    """
+    Compare two version objects, and warn if the major or minor version differs.
+    """
+    if not (version1 and version2):
+        # check impossible, just skip.
+        return
+
+    if version1.major != version2.major:
+        warnings.warn(
+            f"!!! DANGER: Installed Major version of {pkg} differs from the one this model was trained on. "
+            f"This could lead to compatibility issues!"
+        )
+    elif version1.minor != version2.minor:
+        warnings.warn(
+            f"WARNING: Installed Minor version of {pkg} differs from the one this model was trained on. "
+            f"This could potentially lead to compatibility issues!"
+        )
 
 
 def _simpletransformers_version() -> str:
@@ -40,6 +64,13 @@ def get_simpletransformers_version() -> Version:
     return as_version(_simpletransformers_version())
 
 
+def get_verysimpletransformers_version() -> Version:
+    """
+    Get the installed very simple transformers version as a binary Version object.
+    """
+    return as_version(__version__)
+
+
 def _transformers_version() -> str:
     """
     Get the installed transformers version.
@@ -54,7 +85,7 @@ def get_transformers_version() -> Version:
     return as_version(_transformers_version())
 
 
-def get_metadata(content_length: int, compression_level: int) -> Metadata:
+def get_metadata(content_length: int, compression_level: int, device: str) -> Metadata:
     """
     Build the binary metadata object that is prefixed before the model data.
 
@@ -71,8 +102,14 @@ def get_metadata(content_length: int, compression_level: int) -> Metadata:
         + "Usage: `python -m verysimpletransformers model.vst`\n"
     )
 
-    header.simple_transformers_version = get_simpletransformers_version()
     header.transformers_version = get_transformers_version()
+    header.simpletransformers_version = get_simpletransformers_version()
+    header.verysimpletransformers_version = get_verysimpletransformers_version()
+
+    header.torch_version = torch.__version__
+    header.cuda_available = torch.cuda.is_available()
+    header.device = device
+
     header.compression_level = compression_level
 
     meta = Metadata()

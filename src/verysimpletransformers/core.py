@@ -1,48 +1,33 @@
 """
 Core functionality of this library.
 """
-import io
 import struct
 import sys
 import typing
+import warnings
 import zlib
-from io import BytesIO
 from pathlib import Path
 
 import dill  # nosec
 import torch
-from dill import Unpickler  # nosec
 from tqdm import tqdm
 
-from .metadata import get_metadata
+from .metadata import (
+    as_version,
+    compare_versions,
+    get_metadata,
+    get_simpletransformers_version,
+    get_transformers_version,
+    get_verysimpletransformers_version,
+)
 from .metadata_schema import MetaHeader
+from .support import CudaUnpickler, TqdmProgress, as_binaryio, dummy_tqdm, write_bundle
 from .versioning import get_version
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     from .types import AllSimpletransformersModels
 
-
-def write_bundle(output_file: typing.BinaryIO, *to_write: bytes) -> None:
-    """
-    Write all extra arguments to the output file.
-    """
-    with output_file as f_out:
-        for element in to_write:
-            f_out.write(element)
-
-
-def as_binaryio(file: str | Path | typing.BinaryIO | None, mode: typing.Literal["rb", "wb"] = "rb") -> typing.BinaryIO:
-    """
-    Convert a number of possible 'file' descriptions into a single BinaryIO interface.
-    """
-    if isinstance(file, str):
-        file = Path(file)
-    if isinstance(file, Path):
-        file = file.open(mode)
-    if file is None:
-        file = BytesIO()
-
-    return file
+from configuraptor import asbytes
 
 
 def to_vst(
@@ -69,7 +54,7 @@ def to_vst(
         output_file = as_binaryio(output_file, "wb")
 
         hashbang = b"#!/usr/bin/env verysimpletransformers\n"
-        metadata = get_metadata(len(pickled), compression_level=compression)._pack()
+        metadata = asbytes(get_metadata(len(pickled), compression_level=compression, device=model.device))
         progress.update(10)
 
         write_bundle(output_file, hashbang, metadata, pickled)
@@ -80,61 +65,6 @@ def to_vst(
 
 
 bundle = to_vst
-
-
-class CudaUnpickler(Unpickler):  # type: ignore
-    """
-    Custom unpickler that deals with cuda being possibly available or missing.
-    """
-
-    def __init__(self, filelike: typing.BinaryIO, *a: typing.Any, device: str = "cpu", **kw: typing.Any):
-        """
-        You can choose a device to load the model onto (cpu, cuda).
-        """
-        self.device = device
-        super().__init__(filelike, *a, **kw)
-
-    def find_class(self, module: str, name: str) -> typing.Any:
-        """
-        Custom unpickling behavior.
-        """
-        if module == "torch.storage" and name == "_load_from_bytes":
-            return lambda b: torch.load(io.BytesIO(b), map_location=self.device)
-        else:
-            return super().find_class(module, name)
-
-    @classmethod
-    def loads(cls, data: bytes, device: str = "cpu") -> typing.Any:
-        """
-        Shortcut for creating an instance and calling .load on it.
-        """
-        return cls(io.BytesIO(data), device=device).load()
-
-
-class DummyTqdm:
-    """
-    Can be used in stead of a tqdm object but this does nothing.
-    """
-
-    def update(self, _: int) -> bool | None:
-        """
-        Same signature as tqdm.update.
-        """
-        return None
-
-
-dummy_tqdm = DummyTqdm()
-
-
-class TqdmProgress(typing.Protocol):
-    """
-    Protocol for tqdm, so DummyTqdm can be passed as well.
-    """
-
-    def update(self, num: int) -> bool | None:
-        """
-        The signature of tqdm.update.
-        """
 
 
 def load_compressed_model(
@@ -155,6 +85,47 @@ def load_compressed_model(
     return result
 
 
+def _run_metadata_checks(data: bytes, cls: typing.Type[MetaHeader]) -> None:
+    metadata: MetaHeader = cls.load(data)
+    # metadata is versioned, so properties can change. Use 'getattr' to prevent issues!
+
+    compare_versions("transformers", getattr(metadata, "transformers_version", None), get_transformers_version())
+
+    compare_versions(
+        "simple transformers", getattr(metadata, "simpletransformers_version", None), get_simpletransformers_version()
+    )
+
+    compare_versions(
+        "very simple transformers",
+        getattr(metadata, "verysimpletransformers_version", None),
+        get_verysimpletransformers_version(),
+    )
+
+    if torch_version := getattr(metadata, "torch_version", None):
+        compare_versions("torch", as_version(torch_version), as_version(torch.__version__))
+
+
+def run_metadata_checks(
+    open_file: typing.BinaryIO, meta_length: int, version: int | typing.Literal["latest"] = "latest"
+) -> None:
+    """
+    Given an open file object, the meta length and version, try to parse the Meta Header object and run some \
+        check on it.
+
+    If this fails, no worries but warn the user about it.
+    """
+    if cls := get_version(MetaHeader, version):
+        try:
+            return _run_metadata_checks(open_file.read(meta_length), cls)
+        except Exception as e:
+            warnings.warn(
+                "An issue occurred while attempting to extract the file's metadata. "
+                "We will proceed with loading your model, but this may result in potential problems.",
+                category=BytesWarning,
+                source=e,
+            )
+
+
 def _from_vst(open_file: typing.BinaryIO, device: str = "auto") -> "AllSimpletransformersModels":
     # todo: currently, cuda is always converted to CPU.
     #   this should be 1. selectable by the user and/or 2. some based on cuda.is_available().
@@ -166,12 +137,10 @@ def _from_vst(open_file: typing.BinaryIO, device: str = "auto") -> "AllSimpletra
         # extract lengths before actually loading meta header object,
         # because its variable!
         version, meta_length, content_length = struct.unpack("H H Q", open_file.read(16))
-        if cls := get_version(MetaHeader, version):
-            metadata = cls.load(open_file.read(meta_length))  # type: ignore
-        # else: ...
-        # todo: metadata checks
+
+        run_metadata_checks(open_file, meta_length, version)
+
         # todo: device from metadata + args
-        print(metadata)
         if device == "auto":
             device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"{device=}")

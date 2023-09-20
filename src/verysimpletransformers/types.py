@@ -10,6 +10,8 @@ class DummyModel:
     Replacement for actual (big) ML model, useful for pytesting.
     """
 
+    device = "cpu"
+
     @typing.overload
     def predict(self, target: str, **__: typing.Any) -> str:  # pragma: no cover
         """

@@ -27,7 +27,7 @@ dependencies = [
     "typer[all]",
     "simpletransformers",
     "torch",
-    "configuraptor >= 1.17",
+    "configuraptor >= 1.18",
     "tqdm",
 ]
 
