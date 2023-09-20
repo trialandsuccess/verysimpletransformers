@@ -2,8 +2,9 @@
 import typer
 from configuraptor.singleton import Singleton
 from rich import print
-from su6.core import warn, Verbosity, state, DEFAULT_VERBOSITY  # todo: replace these
+from su6.core import DEFAULT_VERBOSITY, Verbosity, state, warn  # todo: replace these
 from typing_extensions import Never
+
 from .__about__ import __version__
 
 app = typer.Typer()
@@ -25,6 +26,7 @@ def other() -> None:
     print("bye")
     0 / 0
 
+
 def version_callback() -> Never:
     """
     --version requested!
@@ -41,6 +43,7 @@ def show_config_callback() -> Never:
     print(state)
 
     raise typer.Exit(0)
+
 
 @app.callback(invoke_without_command=True)
 def main(

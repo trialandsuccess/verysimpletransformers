@@ -9,10 +9,10 @@ import zlib
 from io import BytesIO
 from pathlib import Path
 
-import torch
-from dill import Unpickler
-from tqdm import tqdm
 import dill  # nosec
+import torch
+from dill import Unpickler  # nosec
+from tqdm import tqdm
 
 from .metadata import get_metadata
 from .metadata_schema import MetaHeader
@@ -82,18 +82,80 @@ def to_vst(
 bundle = to_vst
 
 
-class CudaUnpickler(Unpickler):
-    def find_class(self, module, name):
-        if module == 'torch.storage' and name == '_load_from_bytes':
-            return lambda b: torch.load(io.BytesIO(b), map_location='cpu') # todo: dynamic map_location
+class CudaUnpickler(Unpickler):  # type: ignore
+    """
+    Custom unpickler that deals with cuda being possibly available or missing.
+    """
+
+    def __init__(self, filelike: typing.BinaryIO, *a: typing.Any, device: str = "cpu", **kw: typing.Any):
+        """
+        You can choose a device to load the model onto (cpu, cuda).
+        """
+        self.device = device
+        super().__init__(filelike, *a, **kw)
+
+    def find_class(self, module: str, name: str) -> typing.Any:
+        """
+        Custom unpickling behavior.
+        """
+        if module == "torch.storage" and name == "_load_from_bytes":
+            return lambda b: torch.load(io.BytesIO(b), map_location=self.device)
         else:
             return super().find_class(module, name)
 
     @classmethod
-    def loads(cls, data: bytes) -> typing.Any:
-        return cls(io.BytesIO(data)).load()
+    def loads(cls, data: bytes, device: str = "cpu") -> typing.Any:
+        """
+        Shortcut for creating an instance and calling .load on it.
+        """
+        return cls(io.BytesIO(data), device=device).load()
 
-def _from_vst(open_file: typing.BinaryIO) -> "AllSimpletransformersModels":
+
+class DummyTqdm:
+    """
+    Can be used in stead of a tqdm object but this does nothing.
+    """
+
+    def update(self, _: int) -> bool | None:
+        """
+        Same signature as tqdm.update.
+        """
+        return None
+
+
+dummy_tqdm = DummyTqdm()
+
+
+class TqdmProgress(typing.Protocol):
+    """
+    Protocol for tqdm, so DummyTqdm can be passed as well.
+    """
+
+    def update(self, num: int) -> bool | None:
+        """
+        The signature of tqdm.update.
+        """
+
+
+def load_compressed_model(
+    compressed: bytes, device: str, progress: TqdmProgress = dummy_tqdm
+) -> "AllSimpletransformersModels":
+    """
+    Load compressed bytes into an actual simple transformers model, move cuda settings around.
+    """
+    compressed = zlib.decompress(compressed)
+    progress.update(30)
+
+    # load + fix cuda (pt1):
+    result: "AllSimpletransformersModels" = CudaUnpickler.loads(compressed, device=device)
+    # fix cuda (pt2):
+    result.device = device
+
+    progress.update(20)
+    return result
+
+
+def _from_vst(open_file: typing.BinaryIO, device: str = "auto") -> "AllSimpletransformersModels":
     # todo: currently, cuda is always converted to CPU.
     #   this should be 1. selectable by the user and/or 2. some based on cuda.is_available().
     #   cuda info should also be stored in the metadata (available + enabled)
@@ -108,35 +170,27 @@ def _from_vst(open_file: typing.BinaryIO) -> "AllSimpletransformersModels":
             metadata = cls.load(open_file.read(meta_length))  # type: ignore
         # else: ...
         # todo: metadata checks
+        # todo: device from metadata + args
         print(metadata)
+        if device == "auto":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f"{device=}")
         progress.update(20)
 
         pickled = open_file.read(content_length)
         progress.update(20)
 
-        pickled = zlib.decompress(pickled)
-        progress.update(30)
-
-        # load + fix cuda (pt1):
-        result: "AllSimpletransformersModels" = CudaUnpickler.loads(pickled)
-
-        # fix cuda (pt2):
-        result.device = "cpu"
-
-        # result = dill.loads(pickled)  # nosec
-        progress.update(20)
-
-    return result
+        return load_compressed_model(pickled, device, progress)
 
 
-def from_vst(input_file: str | Path | typing.BinaryIO) -> "AllSimpletransformersModels":
+def from_vst(input_file: str | Path | typing.BinaryIO, device: str = "auto") -> "AllSimpletransformersModels":
     """
     Given a file path-like object, load the Simple Transformers model back into memory.
     """
-    print('Starting load', file=sys.stderr)
+    print("Starting load", file=sys.stderr)
 
     with as_binaryio(input_file) as f:
-        result = _from_vst(f)
+        result = _from_vst(f, device=device)
 
     print("Finished load!", file=sys.stderr)
     return result
