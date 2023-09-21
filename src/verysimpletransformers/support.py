@@ -3,9 +3,12 @@ Helper functionality.
 """
 
 import io
+import select
+import sys
 import typing
 from io import BytesIO
 from pathlib import Path
+from types import TracebackType
 
 import torch
 from dill import Unpickler  # nosec
@@ -87,3 +90,37 @@ class TqdmProgress(typing.Protocol):
         """
         The signature of tqdm.update.
         """
+
+
+class RedirectStdStreams:
+    def __init__(self, stdout: typing.TextIO = None, stderr: typing.TextIO = None) -> None:
+        self._stdout = stdout or sys.stdout
+        self._stderr = stderr or sys.stderr
+
+    def __enter__(self) -> None:
+        self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
+        self.old_stdout.flush()
+        self.old_stderr.flush()
+        sys.stdout, sys.stderr = self._stdout, self._stderr
+
+    def __exit__(self, exc_type: typing.Type[Exception], exc_value: Exception, traceback: TracebackType) -> None:
+        self._stdout.flush()
+        self._stderr.flush()
+
+        print(self, exc_type, exc_value, traceback)
+
+        sys.stdout = self.old_stdout
+        sys.stderr = self.old_stderr
+
+
+def has_stdin() -> bool:
+    return bool(
+        select.select(
+            [
+                sys.stdin,
+            ],
+            [],
+            [],
+            0.0,
+        )[0]
+    )

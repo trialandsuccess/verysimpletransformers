@@ -29,6 +29,7 @@ dependencies = [
     "torch",
     "configuraptor >= 1.18",
     "tqdm",
+    "questionary",
 ]
 
 [project.optional-dependencies]

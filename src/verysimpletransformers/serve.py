@@ -1,25 +1,60 @@
+from __future__ import annotations
+
 import http.server
 import json
+import typing
 from urllib.parse import parse_qs
 
+import numpy
 
-class MachineLarningModelHandler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, model, *a, **kw):
+if typing.TYPE_CHECKING:
+    from .types import AllSimpletransformersModels
+
+
+class MachineLearningModelHandler(http.server.SimpleHTTPRequestHandler):
+    model: AllSimpletransformersModels
+
+    def __init__(self, model: AllSimpletransformersModels, *a: typing.Any, **kw: typing.Any) -> None:
         self.model = model
         super().__init__(*a, **kw)
 
-    def respond(self, status_code, content_type, response_data):
+    def _predict(self, inputs: list[str]) -> list[str | int]:
+        predictions, _ = self.model.predict(inputs)
+
+        if isinstance(predictions, numpy.ndarray):
+            predictions = predictions.tolist()
+
+        return typing.cast(list[str | int], predictions)
+
+    def respond(
+        self, response_data: typing.Any, content_type: str = "application/json", status_code: int = 200
+    ) -> None:
+        if not isinstance(response_data, str):
+            if content_type == "application/json":
+                response_data = json.dumps(response_data)
+            else:
+                # todo: support more content types?
+                content_type = "text/plain"
+                response_data = str(response_data)
+
         self.send_response(status_code)
-        self.send_header("Content-type", content_type)
+        self.send_header("Content-Type", content_type)
         self.end_headers()
         self.wfile.write(response_data.encode())
 
-    def do_GET(self):
-        query_params = parse_qs(self.path.split("?")[1])
-        response_message = f"GET request received with query parameters: {query_params}"
-        self.respond(200, "text/plain", response_message)
+    def do_GET(self) -> None:
+        if "?" not in self.path:
+            return self.respond("Please include a ?query=... in your GET-request.")
 
-    def do_POST(self):
+        query_params = parse_qs(self.path.split("?")[1])
+
+        if "query" not in query_params:
+            return self.respond("Please include a ?query=... in your GET-request.")
+
+        response_message = self._predict(query_params["query"])
+        self.respond(response_message)
+
+    def do_POST(self) -> None:
         content_type = self.headers.get("Content-Type")
         content_length = int(self.headers.get("Content-Length", 0))
 
@@ -27,22 +62,30 @@ class MachineLarningModelHandler(http.server.SimpleHTTPRequestHandler):
             data = self.rfile.read(content_length)
             try:
                 json_data = json.loads(data.decode("utf-8"))
-                response_data = json.dumps(json_data)
-                self.respond(200, "application/json", response_data)
+                if not isinstance(json_data, list):
+                    json_data = [json_data]
+                response_data = self._predict(json_data)
+                self.respond(response_data)
             except json.JSONDecodeError:
-                self.respond(400, "text/plain", "Invalid JSON data")
+                self.respond("Invalid JSON data", status_code=400)
         else:
             post_data = self.rfile.read(content_length)
-            response_message = f"POST request received with standard form data: {post_data.decode('utf-8')}"
-            self.respond(200, "text/plain", response_message)
+            response_message = self._predict([post_data.decode("utf-8")])
+            self.respond(response_message)
+
+    @classmethod
+    def bind(cls, model: "AllSimpletransformersModels") -> typing.Callable[..., "MachineLearningModelHandler"]:
+        def wrapper(*args: typing.Any, **kwargs: typing.Any) -> "MachineLearningModelHandler":
+            return MachineLearningModelHandler(model, *args, **kwargs)
+
+        return wrapper
 
 
-class MachineLarningModelServer:
-    def __init__(self, server_address: str, port: int):
+class MachineLearningModelServer:
+    def __init__(self, server_address: str, port: int) -> None:
         self.server_address = server_address
         self.port = port
 
-    def serve_forever(self, model):
-        handler = lambda *args, **kwargs: MachineLarningModelHandler(model, *args, **kwargs)
-        with http.server.HTTPServer((self.server_address, self.port), handler) as httpd:
+    def serve_forever(self, model: "AllSimpletransformersModels") -> None:
+        with http.server.HTTPServer((self.server_address, self.port), MachineLearningModelHandler.bind(model)) as httpd:
             httpd.serve_forever()
