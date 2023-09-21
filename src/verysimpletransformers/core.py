@@ -64,7 +64,7 @@ def to_vst(
     return output_file
 
 
-bundle = to_vst
+bundle_model = to_vst
 
 
 def load_compressed_model(

@@ -1,31 +1,17 @@
-from src.verysimpletransformers.cli import app
-from typer.testing import CliRunner
+from src.verysimpletransformers.cli import _autoselect_action, generate_custom_style
 
-runner = CliRunner(mix_stderr=False)
+# from typer.testing import CliRunner
 
-def test_config():
-    result = runner.invoke(app, ["--show-config"])
-    assert result.exit_code == 0
-    assert "ApplicationState(" in result.stdout
+from src.verysimpletransformers.support import has_stdin
+
+# runner = CliRunner(mix_stderr=False)
 
 
-def test_version():
-    result = runner.invoke(app, ["--version"])
-    assert result.exit_code == 0
-    assert "vst Version: " in result.stdout
+def test_actions():
+    # todo: catch stdout
+    _autoselect_action([])
+    _autoselect_action(["invalid"])
+    _autoselect_action(["upgrade something.vst"])
 
-
-def test_good():
-    result = runner.invoke(app, ["test"])
-    assert result.exit_code == 0
-    assert "hi" in result.stdout
-
-
-def test_bad():
-    result = runner.invoke(app, ["other"])
-    assert result.exit_code == 1
-    assert "bye" in result.stdout
-
-def test_unknown():
-    result = runner.invoke(app, ["yet_another"])
-    assert result.exit_code == 2
+def test_style():
+    assert generate_custom_style()

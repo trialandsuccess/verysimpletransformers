@@ -13,25 +13,25 @@ class DummyModel:
     device = "cpu"
 
     @typing.overload
-    def predict(self, target: str, **__: typing.Any) -> str:  # pragma: no cover
+    def predict(self, target: str, **__: typing.Any) -> tuple[str, None]:  # pragma: no cover
         """
         If you enter a single input, you get a single output.
         """
 
     @typing.overload
-    def predict(self, target: list[str], **__: typing.Any) -> list[str]:  # pragma: no cover
+    def predict(self, target: list[str], **__: typing.Any) -> tuple[list[str], None]:  # pragma: no cover
         """
         If you enter a list of inputs, you get a list of outputs.
         """
 
-    def predict(self, target: str | list[str], **__: typing.Any) -> str | list[str]:
+    def predict(self, target: str | list[str], **__: typing.Any) -> tuple[str | list[str], None]:
         """
         Simulate a machine learning response by just returning a reversed echo of the input.
         """
         if isinstance(target, list):
-            return [self.predict(_) for _ in target]
+            return [self.predict(_)[0] for _ in target], None
 
-        return target[::-1]
+        return target[::-1], None
 
 
 if typing.TYPE_CHECKING:  # pragma: no cover

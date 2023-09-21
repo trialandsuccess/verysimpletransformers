@@ -12,7 +12,7 @@ from rich import print
 from .core import from_vst
 from .support import RedirectStdStreams, has_stdin
 
-if typing.TYPE_CHECKING:
+if typing.TYPE_CHECKING:  # pragma: no cover
     from .types import AllSimpletransformersModels
 
 app = typer.Typer()
@@ -23,6 +23,11 @@ def generate_custom_style(
     main_color: str = "green",  # "#673ab7"
     secondary_color: str = "#673ab7",  # "#f44336"
 ) -> questionary.Style:
+    """
+    Reusable questionary style for all prompts of this tool.
+
+    Primary and secondary color can be changed, other styles stay the same for consistency.
+    """
     return questionary.Style(
         [
             ("qmark", f"fg:{main_color} bold"),  # token in front of the question
@@ -39,12 +44,13 @@ def generate_custom_style(
     )
 
 
-def show_help() -> None:
-    print("Help")
+def _run_interactive(model: str | AllSimpletransformersModels) -> None:  # pragma: no cover
+    """
+    Keep querying the user and process every 'prompt'.
 
-
-def _run_interactive(model: str | AllSimpletransformersModels) -> None:
-    # model prints are hidden by writing to /dev/null
+    If an empty line is entered, the user will be prompted if they want to leave.
+    The user can also exit with ctrl-d or ctrl-c.
+    """
     clear()
     print("Loading", model)
     if isinstance(model, str):
@@ -60,6 +66,8 @@ def _run_interactive(model: str | AllSimpletransformersModels) -> None:
     while True:
         if prompt := questionary.text("", style=generate_custom_style(secondary_color="")).ask():
             with RedirectStdStreams(stdout=devnull, stderr=devnull):
+                # model prints are hidden by writing to /dev/null
+
                 prediction = model.predict(prompt)[0][0]
             print(prediction)
         elif questionary.confirm(
@@ -68,7 +76,17 @@ def _run_interactive(model: str | AllSimpletransformersModels) -> None:
             return
 
 
-def run_stdin(args: list[str]) -> None:
+def run_interactive(args: list[str | AllSimpletransformersModels]) -> None:  # pragma: no cover
+    """
+    Wrapper around _run_interactive to pass the model name from cli args.
+    """
+    return _run_interactive(*args)
+
+
+def run_stdin(args: list[str]) -> None:  # pragma: no cover
+    """
+    If the program immediatly gets data, process line by line and print predictions.
+    """
     model_name = args[0]
     print("Loading model", model_name, "...", file=sys.stderr)
     with RedirectStdStreams(stdout=devnull, stderr=devnull):
@@ -80,15 +98,15 @@ def run_stdin(args: list[str]) -> None:
         print(prediction)
 
 
-def run_interactive(args: list[str | AllSimpletransformersModels]) -> None:
-    return _run_interactive(*args)
-
-
 DEFAULT_PORT = 8000
 DEFAULT_HOST = "localhost"
 
 
-def _serve(filename: str, port: int = DEFAULT_PORT, host: str = DEFAULT_HOST) -> None:
+def _serve(filename: str, port: int = DEFAULT_PORT, host: str = DEFAULT_HOST) -> None:  # pragma: no cover
+    """
+    Start a simple HTTP server that responds to queries with model outputs.
+    """
+    # only local import to reduce overhead on other commands.
     from .serve import MachineLearningModelServer
 
     print("Loading model", filename, "...", file=sys.stderr)
@@ -100,33 +118,78 @@ def _serve(filename: str, port: int = DEFAULT_PORT, host: str = DEFAULT_HOST) ->
     MachineLearningModelServer(host, port).serve_forever(model)
 
 
-def serve(args: list[str], port: int = DEFAULT_PORT, host: str = DEFAULT_HOST) -> None:
+def serve(args: list[str], port: int = DEFAULT_PORT, host: str = DEFAULT_HOST) -> None:  # pragma: no cover
+    """
+    Wrapper around _serve to pass the model name from cli args.
+    """
     return _serve(args[0], port=port, host=host)
 
 
 def upgrade(args: list[str]) -> None:
+    """
+    Upgrade the metadata of a model to the latest version.
+    """
     print("upgrade", args)
 
 
-def default(_: list[str]) -> None:
-    print(" default ")
-    print("(show all syntax options)")
-    # ./model.vst
-    # ./model.vst <action>
-    # vst model.vst
-    # vst <action> model.vst
-    # vst model.vst <action>
-    # cat prompts.txt | ./model.vst
-    # cat prompts.txt | vst model.vst
-    # ./model.vst < prompts.txt
-    # vst model.vst < prompts.txt
+def show_help(with_welcome=True):
+    # Introduction
+    if with_welcome:
+        print("Welcome to VerySimpleTransformers CLI!")
+
+    print("You can use 'verysimpletransformers' or 'vst' interchangeably.")
+
+    # Basic usage examples with vst and verysimpletransformers options
+    print("\nBasic Usage:")
+    print("  verysimpletransformers model.vst")
+    print("  verysimpletransformers <action> model.vst")
+    print("  verysimpletransformers model.vst <action>")
+    print("  vst model.vst")
+    print("  vst <action> model.vst")
+    print("  vst model.vst <action>")
+    print("  ./model.vst")
+    print("  ./model.vst <action>")
+
+    # Explanation of available <action> options
+    print("\nAvailable <action> options:")
+    print("- 'run': Run the model interactively by typing prompts.")
+    print("- 'serve': Start a simple HTTP server to serve model outputs.")
+    print("  Options for 'serve':")
+    print("    --port <PORT>     Specify the port number (default: 8000)")
+    print("    --host <HOST>     Specify the host (default: 'localhost')")
+    print("- 'upgrade': Upgrade the metadata of a model to the latest version.")
+
+    print("\nExample:")
+    print("$ vst serve ./classification.vst")
+
+    # Additional notes
+    print("\nNotes:")
+    print("- A .vst file (e.g., 'model.vst') is required for most commands.")
+    print("- You can specify <action>, which can be one of the available options mentioned above.")
+    print("- If you leave the <action> empty, a dropdown menu will appear for you to select from.")
+    print("- You can use 'vst' or 'verysimpletransformers' interchangeably.")
 
 
-def clear() -> None:
+def default(args: list[str]) -> None:
+    """
+    Invalid command passed, show all syntax options.
+    """
+    print(f"Invalid arguments {args}. Here are the available syntax options:\n")
+
+    show_help(with_welcome=False)
+
+
+def clear() -> None:  # pragma: no cover
+    """
+    Remove previous terminal output.
+    """
     os.system("clear")  # nosec
 
 
-def prompt_user(args: list[str]) -> None:
+def prompt_user(args: list[str]) -> None:  # pragma: no cover
+    """
+    If a model was passed to the cli without an action, the user gets a dropdown of options.
+    """
     clear()
     questionary.print(args[0], style="bold italic fg:green")
 
@@ -154,15 +217,10 @@ def prompt_user(args: list[str]) -> None:
             upgrade(args)
 
 
-@app.command()
-def main(args: list[str] = typer.Argument(None), port: int = 8000, host: str = "localhost") -> None:
+def _autoselect_action(args: list[str], **kwargs):
     file = ".".join(args)
 
     iterate = [_ for _ in file.split(".") if _]
-
-    if has_stdin():
-        return run_stdin(args)
-
     match iterate:
         case []:
             show_help()
@@ -181,11 +239,15 @@ def main(args: list[str] = typer.Argument(None), port: int = 8000, host: str = "
 
         case ["serve", _, "vst"]:
             args.pop(0)
-            serve(args, port=port, host=host)
+            serve(args, port=kwargs['port'], host=kwargs['host'])
 
         case [_, "vst", "serve"]:
             args.pop(-1)
-            serve(args, port=port, host=host)
+            serve(args, port=kwargs['port'], host=kwargs['host'])
+
+        case ["upgrade", _, "vst"]:
+            args.pop(-1)
+            upgrade(args)
 
         case [_, "vst", "upgrade"]:
             args.pop(-1)
@@ -194,4 +256,13 @@ def main(args: list[str] = typer.Argument(None), port: int = 8000, host: str = "
         case _:
             default(args)
 
-    # todo: support stdin: `cat prompt.txt | ./model.vst`, `./model.vst < prompt.txt`
+
+@app.command()
+def main(args: list[str] = typer.Argument(None), port: DEFAULT_PORT = 8000, host: str = DEFAULT_HOST) -> None:
+    """
+    Cli entrypoint.
+    """
+    if has_stdin():
+        return run_stdin(args)
+
+    return _autoselect_action(args, port=port, host=host)

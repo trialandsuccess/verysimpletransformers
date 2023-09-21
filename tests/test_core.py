@@ -147,5 +147,8 @@ def test_backwards_compat():
     assert hasattr(new_model, 'predict')
     assert not hasattr(new_model, 'predictx')
 
-    assert new_model.predict("something") == "gnihtemos" == model.predict("something") == model.predict(["something"])[
-        0]
+
+    assert (new_model.predict("something")[0]
+            == "gnihtemos"
+            == model.predict("something")[0]
+            == model.predict(["something"])[0][0])
