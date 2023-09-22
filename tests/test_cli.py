@@ -1,17 +1,52 @@
-from src.verysimpletransformers.cli import _autoselect_action, generate_custom_style
+from src.verysimpletransformers.cli import (
+    default,
+    generate_custom_style,
+    show_help,
+    upgrade, show_info,
+)
+from tests.helpers_for_test import _get_corrupted_vst
 
-# from typer.testing import CliRunner
 
-from src.verysimpletransformers.support import has_stdin
-
-# runner = CliRunner(mix_stderr=False)
+# note: most of CLI is interactive, so no tests were written for it!
 
 
-def test_actions():
-    # todo: catch stdout
-    _autoselect_action([])
-    _autoselect_action(["invalid"])
-    _autoselect_action(["upgrade something.vst"])
+def test_actions(capsys):
+    show_help()
+    captured = capsys.readouterr()
+
+    assert "Welcome to VerySimpleTransformers" in captured.out
+    assert "You can use 'verysimpletransformers'" in captured.out
+
+    default([])
+    captured = capsys.readouterr()
+    assert "Invalid arguments" in captured.out
+    assert "Welcome to VerySimpleTransformers" not in captured.out
+    assert "You can use 'verysimpletransformers'" in captured.out
+
+def test_show_info(capsys):
+    # v0
+    show_info("pytest0.vst")
+    captured = capsys.readouterr().out
+
+    assert "error:" not in captured
+    assert "verysimpletransformers_version" not in captured
+
+    # v1
+    show_info("pytest1.vst")
+    captured = capsys.readouterr().out
+
+    assert "error:" not in captured
+    assert "verysimpletransformers_version" in captured
+
+    file = _get_corrupted_vst(reason="compression")
+
+    with file as f:
+        show_info(f)
+    captured = capsys.readouterr().out
+
+    assert "error:" in captured
+    assert "verysimpletransformers_version" in captured
+
 
 def test_style():
     assert generate_custom_style()

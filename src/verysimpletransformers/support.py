@@ -1,8 +1,11 @@
 """
 Helper functionality.
 """
+from __future__ import annotations
 
+import contextlib
 import io
+import os
 import select
 import sys
 import typing
@@ -12,6 +15,9 @@ from types import TracebackType
 
 import torch
 from dill import Unpickler  # nosec
+from typing_extensions import Self
+
+devnull = open(os.devnull, "w")  # noqa: SIM115
 
 
 def write_bundle(output_file: typing.BinaryIO, *to_write: bytes) -> None:
@@ -21,6 +27,17 @@ def write_bundle(output_file: typing.BinaryIO, *to_write: bytes) -> None:
     with output_file as f_out:
         for element in to_write:
             f_out.write(element)
+
+
+@contextlib.contextmanager
+def uncloseable(fd: typing.BinaryIO) -> typing.Generator[typing.BinaryIO, typing.Any, None]:
+    """
+    Context manager which turns the fd's close operation to no-op for the duration of the context.
+    """
+    close = fd.close
+    fd.close = lambda: None  # type: ignore
+    yield fd
+    fd.close = close  # type: ignore
 
 
 def as_binaryio(file: str | Path | typing.BinaryIO | None, mode: typing.Literal["rb", "wb"] = "rb") -> typing.BinaryIO:
@@ -33,6 +50,11 @@ def as_binaryio(file: str | Path | typing.BinaryIO | None, mode: typing.Literal[
         file = file.open(mode)
     if file is None:
         file = BytesIO()
+    if isinstance(file, io.BytesIO):
+        # so .read() works after .write():
+        file.seek(0)
+        # so the with-statement doesn't close the in-memory file:
+        file = uncloseable(file)  # type: ignore
 
     return file
 
@@ -70,6 +92,17 @@ class DummyTqdm:  # pragma: no cover
     """
     Can be used in stead of a tqdm object but this does nothing.
     """
+
+    def __enter__(self) -> Self:
+        """
+        Do nothing on enter, just enables usage as context manager.
+        """
+        return self
+
+    def __exit__(self, exc_type: typing.Type[Exception], exc_value: Exception, traceback: TracebackType) -> None:
+        """
+        Do nothing on exit, just enables usage as context manager.
+        """
 
     def update(self, _: int) -> bool | None:
         """
@@ -129,7 +162,7 @@ class RedirectStdStreams:  # pragma: no cover
         sys.stderr = self.old_stderr
 
 
-def has_stdin() -> bool: # pragma: no cover
+def has_stdin() -> bool:  # pragma: no cover
     """
     Returns whether the program was provided with data from std in.
 

@@ -4,6 +4,10 @@ Mostly for mypy (and pytest).
 
 import typing
 
+import numpy
+import numpy as np
+import numpy.typing as npt
+
 
 class DummyModel:
     """
@@ -65,3 +69,33 @@ if typing.TYPE_CHECKING:  # pragma: no cover
         | T5Model
         | DummyModel
     )
+
+
+@typing.runtime_checkable
+class SimpleTransformerProtocol(typing.Protocol):
+    """
+    Defines the structue of a simple transformer model.
+
+    This can be used to test isinstance without actually importing simpletransformers.
+    """
+
+    device: str
+
+    def predict(self, to_predict: list[str]) -> tuple[list[str] | npt.NDArray[numpy.int32], npt.NDArray[np.float64]]:
+        """
+        Simple Transformers have a predict function that calls a trained model on some inputs.
+
+        It returns a tuple with 2 parts:
+
+        1.
+        If the model has labeled outputs, a list of strings will be returned.
+        If the labels are unlabeled, a numpy array of ints will be returned.
+        With .tolist() this can be transformed to a normal list.
+
+        2.
+        Additionally, a nested numpy array of floats is returned containing the predictions for each label:
+        E.g. for 2 inputs and 3 labels:
+        array([[-1.06826222, -2.81530643,  4.42381239], [-1.54674757, -2.70588231,  4.82942677]]))
+        """
+
+    # real models have more of course, but these are the properties expected by our code.

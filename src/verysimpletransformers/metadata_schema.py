@@ -76,4 +76,4 @@ class Metadata(BinaryConfig):
     meta_version = BinaryField(int, format="H")
     meta_length = BinaryField(int, format="H")
     content_length = BinaryField(int, format="Q")
-    meta_header = BinaryField(MetaHeader)
+    meta_header = BinaryField(MetaHeader)  # todo: can this be typed better? (Versioned class kinda breaks it)

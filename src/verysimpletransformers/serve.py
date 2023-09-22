@@ -67,12 +67,16 @@ class MachineLearningModelHandler(http.server.SimpleHTTPRequestHandler):
         Parse ?query in GET requests.
         """
         if "?" not in self.path:
-            return self.respond("Please include a ?query=... in your GET-request.", content_type="text/plain", status_code=400)
+            return self.respond(
+                "Please include a ?query=... in your GET-request.", content_type="text/plain", status_code=400
+            )
 
         query_params = parse_qs(self.path.split("?")[1])
 
         if "query" not in query_params:
-            return self.respond("Please include a ?query=... in your GET-request.",  content_type="text/plain", status_code=400)
+            return self.respond(
+                "Please include a ?query=... in your GET-request.", content_type="text/plain", status_code=400
+            )
 
         response_message = self._predict(query_params["query"])
         self.respond(response_message)
@@ -118,7 +122,7 @@ class MachineLearningModelHandler(http.server.SimpleHTTPRequestHandler):
         return wrapper
 
 
-class MachineLearningModelServer: # pragma: no cover
+class MachineLearningModelServer:  # pragma: no cover
     """
     Shortcut that combines HTTPServer and MachineLearningModelHandler.
 

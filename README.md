@@ -211,10 +211,7 @@ structure is useful for working with these files effectively. The format consist
       compressed) machine learning model that was bundled into the `.vst` file.
     - The model contents are stored (and loaded) using `dill` (which is an extension of `pickle`).
 
-
-
-
-
+```
 
 
                               ┌───────────────────────────────────────┐
@@ -278,8 +275,7 @@ structure is useful for working with these files effectively. The format consist
                               └───────────────────────────────────────┘
 
 
-
-
+```
 
 ## License
 

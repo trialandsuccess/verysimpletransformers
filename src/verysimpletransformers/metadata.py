@@ -13,6 +13,7 @@ from plumbum.cmd import grep
 
 from .__about__ import __version__
 from .metadata_schema import Metadata, MetaHeader, Version
+from .versioning import get_version
 
 
 def as_version(version_str: str) -> Version:
@@ -26,24 +27,28 @@ def as_version(version_str: str) -> Version:
     return version
 
 
-def compare_versions(pkg: str, version1: Version | None, version2: Version | None) -> None:
+def compare_versions(pkg: str, version1: Version | None, version2: Version | None) -> bool:
     """
     Compare two version objects, and warn if the major or minor version differs.
     """
     if not (version1 and version2):
         # check impossible, just skip.
-        return
+        return False
 
     if version1.major != version2.major:
         warnings.warn(
             f"!!! DANGER: Installed Major version of {pkg} differs from the one this model was trained on. "
             f"This could lead to compatibility issues!"
         )
+        return False
     elif version1.minor != version2.minor:
         warnings.warn(
             f"WARNING: Installed Minor version of {pkg} differs from the one this model was trained on. "
             f"This could potentially lead to compatibility issues!"
         )
+        return False
+
+    return True
 
 
 def _simpletransformers_version() -> str:
@@ -94,7 +99,11 @@ def get_metadata(content_length: int, compression_level: int, device: str) -> Me
     and the loader expects these to be correct. If the metadata itself can not be parsed, we can still load the
     actual ML model and just show a warning about the metadata.
     """
-    header = MetaHeader()
+    header_cls = get_version(MetaHeader, "latest")
+    if not header_cls:  # pragma: no cover
+        raise NotImplementedError("MetaHeader should always have a latest version.")
+
+    header = header_cls()
 
     header.welcome_text = (
         "--- Welcome to Very Simple Transformers! ---\n"
@@ -114,7 +123,7 @@ def get_metadata(content_length: int, compression_level: int, device: str) -> Me
 
     meta = Metadata()
 
-    meta.meta_version = 1
+    meta.meta_version = getattr(header_cls, "__version__")
     meta.meta_length = header._get_length()
     meta.content_length = content_length
     meta.meta_header = header
