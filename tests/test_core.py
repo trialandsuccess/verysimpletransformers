@@ -24,7 +24,7 @@ from src.verysimpletransformers.metadata import compare_versions, get_metadata
 from src.verysimpletransformers.metadata_schema import Metadata, Version
 from src.verysimpletransformers.support import as_binaryio
 from src.verysimpletransformers.types import DummyModel, SimpleTransformerProtocol
-from tests.helpers_for_test import _get_v0_dummy, _get_corrupted_vst
+from tests.helpers_for_test import _get_v0_dummy, _get_corrupted_vst, _get_v1_dummy
 
 logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
@@ -89,47 +89,16 @@ def test_version():
 
 def test_bundle():
     # Optional model configuration
-    FAST = True
-
-    if FAST:
-        model = DummyModel()
-    else:
-        # Preparing train data
-        train_data = [
-            ["Aragorn was the heir of Isildur", 1],
-            ["Frodo was the heir of Isildur", 0],
-        ]
-        train_df = pd.DataFrame(train_data)
-        train_df.columns = ["text", "labels"]
-
-        # Preparing eval data
-        eval_data = [
-            ["Theoden was the king of Rohan", 1],
-            ["Merry was the king of Rohan", 0],
-        ]
-        eval_df = pd.DataFrame(eval_data)
-        eval_df.columns = ["text", "labels"]
-
-        model_args = ClassificationArgs(
-            num_train_epochs=1,
-            overwrite_output_dir=True,
-            save_model_every_epoch=False,
-        )
-
-        # Create a ClassificationModel
-        model = ClassificationModel("bert", "prajjwal1/bert-small", args=model_args, use_cuda=torch.cuda.is_available())
-
-        # Train the model
-        model.train_model(train_df)
 
     fp = Path("pytest1.vst")
-    to_vst(model, fp, compression="zero") # illegal but should automatically be changed to 0 (int)
-
+    model = _get_v1_dummy(fp)
     new_model = from_vst(fp)
 
     # assert hasattr(model, 'predict')
     # assert not hasattr(model, 'predictx')
+    assert hasattr(model, "predict")
     assert hasattr(new_model, "predict")
+    assert not hasattr(model, "predictx")
     assert not hasattr(new_model, "predictx")
 
     with pytest.raises(ValueError):
@@ -219,7 +188,8 @@ def test_loading_corrupted():
 def test_backwards_compat():
     fp = Path("pytest0.vst")
 
-    model, new_model = _get_v0_dummy(fp)
+    model = _get_v0_dummy(fp)
+    new_model = from_vst(fp)
 
     assert hasattr(new_model, "predict")
     assert not hasattr(new_model, "predictx")
@@ -235,7 +205,7 @@ def test_backwards_compat():
 def test_upgrade():
     fp = Path("pytest0.vst")
 
-    _, model = _get_v0_dummy(fp)
+    model = _get_v0_dummy(fp)
 
     upgraded = io.BytesIO()
     assert upgrade_metadata(fp, upgraded)

@@ -1,10 +1,12 @@
+from pathlib import Path
+
 from src.verysimpletransformers.cli import (
     default,
     generate_custom_style,
     show_help,
     upgrade, show_info,
 )
-from tests.helpers_for_test import _get_corrupted_vst
+from tests.helpers_for_test import _get_corrupted_vst, _get_v0_dummy, _get_v1_dummy
 
 
 # note: most of CLI is interactive, so no tests were written for it!
@@ -24,6 +26,9 @@ def test_actions(capsys):
     assert "You can use 'verysimpletransformers'" in captured.out
 
 def test_show_info(capsys):
+    fp = Path("pytest0.vst")
+    _get_v0_dummy(fp)
+
     # v0
     show_info("pytest0.vst")
     captured = capsys.readouterr().out
@@ -32,6 +37,9 @@ def test_show_info(capsys):
     assert "verysimpletransformers_version" not in captured
 
     # v1
+    fp = Path("pytest1.vst")
+    _get_v1_dummy(fp)
+
     show_info("pytest1.vst")
     captured = capsys.readouterr().out
 
