@@ -8,7 +8,13 @@ import typer
 from configuraptor import BinaryConfig
 from rich import print
 
-from .core import _from_vst, from_vst_with_metadata, simple_load, upgrade_metadata
+from .core import (
+    DEFAULT_COMPRESSION,
+    _from_vst,
+    from_vst_with_metadata,
+    simple_load,
+    upgrade_metadata,
+)
 from .exceptions import CorruptedModelException, custom_excepthook
 from .support import RedirectStdStreams, as_binaryio, devnull, has_stdin
 from .types import SimpleTransformerProtocol
@@ -104,7 +110,7 @@ def serve(filename: ModelOrFilename, port: int = DEFAULT_PORT, host: str = DEFAU
     MachineLearningModelServer(host, port).serve_forever(model)
 
 
-def upgrade(filename: str, output_file: str = None, compression: int = 0) -> None:  # pragma: no cover
+def upgrade(filename: str, output_file: str = None, compression: int = DEFAULT_COMPRESSION) -> None:  # pragma: no cover
     """
     Upgrade the metadata of a model to the latest version.
     """
@@ -177,7 +183,10 @@ def show_help(with_welcome: bool = True) -> None:
         "    --output <FILE>,       -o <FILE>      Specify which file the upgraded model will be written to "
         "(default: overwrite input file)"
     )
-    print("    --compression <LEVEL>, -c <LEVEL>     Specify the level of compression (default: 0 or previous value)")
+    print(
+        f"    --compression <LEVEL>, -c <LEVEL>     Specify the level of compression "
+        f"(default: {DEFAULT_COMPRESSION} or previous value)"
+    )
     print("- 'show': Show the metadata stored in the model file.")
 
     print("\nExample:")
@@ -251,7 +260,7 @@ def main(
     port: typing.Annotated[int, typer.Option("--port", "-p")] = DEFAULT_PORT,
     host: typing.Annotated[str, typer.Option("--host", "-h")] = DEFAULT_HOST,
     output: typing.Annotated[str, typer.Option("--output", "-o")] = None,
-    compression: typing.Annotated[int, typer.Option("--compression", "-c")] = 0,
+    compression: typing.Annotated[int, typer.Option("--compression", "-c")] = DEFAULT_COMPRESSION,
 ) -> None:  # pragma: no cover
     """
     Cli entrypoint.

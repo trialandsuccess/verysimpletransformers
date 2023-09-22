@@ -44,11 +44,13 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 ZeroThroughNine = typing.Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
+DEFAULT_COMPRESSION = 1
+
 
 def to_vst(
     model: "AllSimpletransformersModels",
     output_file: str | Path | typing.BinaryIO | None,
-    compression: bool | ZeroThroughNine = False,
+    compression: bool | ZeroThroughNine = DEFAULT_COMPRESSION,
 ) -> typing.BinaryIO:
     """
     Convert a trained Simple Transformers model into a .vst file.
@@ -76,7 +78,7 @@ def to_vst(
         output_file = as_binaryio(output_file, "wb")
 
         hashbang = b"#!/usr/bin/env verysimpletransformers\n"
-        metadata = asbytes(get_metadata(len(pickled), compression_level=compression, device=model.device))
+        metadata = asbytes(get_metadata(len(pickled), compression_level=compression, device=str(model.device)))
         progress.update(10)
 
         write_bundle(output_file, hashbang, metadata, pickled)
@@ -320,7 +322,7 @@ def from_vst_with_metadata(
 def upgrade_metadata(
     input_file: str | Path | typing.BinaryIO,
     output_file: str | Path | typing.BinaryIO,
-    compression: int = 0,
+    compression: int = DEFAULT_COMPRESSION,
 ) -> bool:
     """
     Set the input_file's metadata to the latest version (on this system) and save it in output_file.
