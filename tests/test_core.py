@@ -208,7 +208,7 @@ def test_upgrade():
     model = _get_v0_dummy(fp)
 
     upgraded = io.BytesIO()
-    assert upgrade_metadata(fp, upgraded)
+    assert upgrade_metadata(fp, upgraded, compression=None)
 
     with fp.open("rb") as f:
         _, metadata, valid_meta = _from_vst(f, with_model=False, with_metadata=True)

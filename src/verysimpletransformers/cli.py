@@ -10,6 +10,7 @@ from rich import print
 
 from .core import (
     DEFAULT_COMPRESSION,
+    ZeroThroughNine,
     _from_vst,
     from_vst_with_metadata,
     simple_load,
@@ -110,12 +111,14 @@ def serve(filename: ModelOrFilename, port: int = DEFAULT_PORT, host: str = DEFAU
     MachineLearningModelServer(host, port).serve_forever(model)
 
 
-def upgrade(filename: str, output_file: str = None, compression: int = DEFAULT_COMPRESSION) -> None:  # pragma: no cover
+def upgrade(
+    filename: str, output_file: str = None, compression: ZeroThroughNine | int = DEFAULT_COMPRESSION
+) -> None:  # pragma: no cover
     """
     Upgrade the metadata of a model to the latest version.
     """
     output_file = output_file or filename
-    upgrade_metadata(filename, output_file, compression=compression)
+    upgrade_metadata(filename, output_file, compression=typing.cast(ZeroThroughNine, compression))
 
 
 def show_info(filename: str) -> None:

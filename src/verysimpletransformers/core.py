@@ -44,7 +44,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
 
 ZeroThroughNine = typing.Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-DEFAULT_COMPRESSION = 1
+DEFAULT_COMPRESSION: ZeroThroughNine = 1
 
 
 def to_vst(
@@ -322,7 +322,7 @@ def from_vst_with_metadata(
 def upgrade_metadata(
     input_file: str | Path | typing.BinaryIO,
     output_file: str | Path | typing.BinaryIO,
-    compression: int = DEFAULT_COMPRESSION,
+    compression: ZeroThroughNine | None = DEFAULT_COMPRESSION,
 ) -> bool:
     """
     Set the input_file's metadata to the latest version (on this system) and save it in output_file.
@@ -339,9 +339,11 @@ def upgrade_metadata(
 
     print("Starting upgrade on", input_file, file=sys.stderr)
 
-    compression_level = getattr(metadata.meta_header, "compression_level", 0)
-    if not compression and isinstance(compression_level, int):
-        compression = compression_level
+    if compression is None:
+        compression_level = typing.cast(
+            ZeroThroughNine, getattr(metadata.meta_header, "compression_level", DEFAULT_COMPRESSION)
+        )
+        compression = compression_level if isinstance(compression_level, int) else DEFAULT_COMPRESSION
 
     compression = min(compression, 9)
     compression = max(compression, 0)
