@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.1 (2023-09-22)
+
+### Fix
+
+* **device:** Model.device may not be a string, so convert it. Also enable compression by default. ([`d609584`](https://github.com/trialandsuccess/verysimpletransformers/commit/d609584abd384064388d20a1ae5650d5ca05800b))
+
+### Documentation
+
+* **badge:** Fix su6 checks badge in readme ([`4d325cf`](https://github.com/trialandsuccess/verysimpletransformers/commit/4d325cf2ccf271bb896b650a15643efc5aa422fc))
+
 ## v0.1.0 (2023-09-22)
 
 ### Feature
