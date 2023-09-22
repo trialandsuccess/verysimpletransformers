@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.2 (2023-09-22)
+
+### Documentation
+
+* Set badges to absolute url so they work on pypi ([`f427b96`](https://github.com/trialandsuccess/verysimpletransformers/commit/f427b9629cae22de22c12ac53c0a1acb1c02e9aa))
+
 ## v0.1.1 (2023-09-22)
 
 ### Fix
