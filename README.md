@@ -7,8 +7,10 @@
     <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"/></a>
     <a href="https://opensource.org/licenses/MIT"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"/></a>
     <br/>
-    <a href="https://github.com/trialandsuccess/verysimpletransformers/actions"><img alt="verysimpletransformers checks" src="https://github.com/trialandsuccess/verysimpletransformers/actions/workflows/su6.yml/badge.svg?branch=development"/></a>
-    <a href="https://github.com/trialandsuccess/verysimpletransformers/actions"><img alt="Coverage" src="coverage.svg"/></a>
+    <a href="https://github.com/trialandsuccess/verysimpletransformers/actions">
+        <img alt="verysimpletransformers checks" src="https://github.com/trialandsuccess/verysimpletransformers/actions/workflows/su6.yml/badge.svg?branch=master"/>
+    </a>
+    <a href="https://github.com/trialandsuccess/verysimpletransformers/actions"><img alt="Coverage" src="https://raw.githubusercontent.com/trialandsuccess/verysimpletransformers/master/coverage.svg"/></a>
 </div>
 
 -----
