@@ -2,6 +2,20 @@
 
 <!--next-version-placeholder-->
 
+## v0.1.0 (2023-09-22)
+
+### Feature
+
+* **cli:** Improved Model Loading and Metadata Handling ([`56f6070`](https://github.com/trialandsuccess/verysimpletransformers/commit/56f6070ef8031eeff5f563b39b5132bd40e91dbe))
+* **cli:** Made run and serve work, overall better cli ([`c8a2829`](https://github.com/trialandsuccess/verysimpletransformers/commit/c8a2829131f1544fcad0c31ca94e8d7ffe2ada70))
+* **cli:** Started on `vst serve model.vst` command ([`f69c297`](https://github.com/trialandsuccess/verysimpletransformers/commit/f69c29702c2fe4a99240c3ceed92b75cf607fe7c))
+* **meta:** Added metadata checks on load ([`0f56f88`](https://github.com/trialandsuccess/verysimpletransformers/commit/0f56f88126ce94ae0ef3fa3395874d1f17d7338b))
+
+### Documentation
+
+* **examples:** Updated example directory and README ([`713aec7`](https://github.com/trialandsuccess/verysimpletransformers/commit/713aec7654540f84ffd803c81ad889779e8dc088))
+* Updated README, WIP to make more pytests + coverage (although that's hard for the interactive cli part) ([`dd840b6`](https://github.com/trialandsuccess/verysimpletransformers/commit/dd840b6be7a6f045203b30fd79021beae8fe9f64))
+
 ## v0.1.0-beta.3 (2023-09-20)
 
 ### Feature
