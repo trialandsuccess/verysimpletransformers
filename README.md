@@ -29,12 +29,6 @@
 
 Bundling your machine learning model with VerySimpleTransformers is straightforward. Follow these steps:
 
-Import the necessary modules and functions:
-
-```python
-from verysimpletransformers import to_vst
-```
-
 Create or load your machine learning model (e.g., a ClassificationModel) using Simple Transformers.
 
 Example:
@@ -60,7 +54,8 @@ model.train_model(...)
 
 ```
 
-Use the `to_vst` function to package the model into a .vst file with optional compression.
+Import the `verysimpletransformers` package, and use the `to_vst` function to package the model into a .vst file with
+optional compression.
 
 Provide the model, the output file path, and an optional compression level (0-9).
 By default, compression will be disabled.
@@ -74,12 +69,13 @@ The output file path can be specified as:
 Example:
 
 ```python
-from pathlib import Path
+import verysimpletransformers  # or: from verysimpletransformers import to_vst
+from pathlib import Path  # can be used instead of a string
 
-to_vst(model,
-       "my_model.vst",
-       compression=5,  # optional
-       )
+verysimpletransformers.to_vst(model,
+                              "my_model.vst",
+                              compression=5,  # optional
+                              )
 ```
 
 Note: As an alias, `bundle_model` can be used instead of `to_vst`.
@@ -88,30 +84,24 @@ Note: As an alias, `bundle_model` can be used instead of `to_vst`.
 
 Loading a machine learning model from a .vst file is just as simple. Follow these steps:
 
-Import the necessary modules and functions:
-
-```python
-from verysimpletransformers import from_vst
-```
-
-Specify the path to the .vst file you want to load. Just like with `to_vst`,
-this path can be a `str`, `Path` or binary IO.
-
-Example:
-
-```python
-from pathlib import Path
-
-fp = Path("model.vst")
-```
-
+Import `from_vst` from `simpletransformers`.
+Specify the path to the .vst file you want to load. Just like with `to_vst`, this path can be a `str`, `Path` or binary
+IO.
 Use the `from_vst` function to load the model. Optionally, you can specify the `device` parameter to set the device (
 e.g., 'cpu' or 'cuda'). If not specified, the function will select a device based on availability.
 
 Example:
 
 ```python
-new_model = from_vst(fp, device='cuda')
+from verysimpletransformers import from_vst
+from pathlib import Path
+
+fp = Path("model.vst")  # can also be simply a string.
+
+new_model = from_vst(fp,
+                     device='cuda',  # optional
+                     )
+
 ```
 
 You can now use the `new_model` for various machine learning tasks.
@@ -125,6 +115,11 @@ Note: As an alias, `load_model` can be used instead of `to_vst`.
 
 - Ensure that you have the required dependencies, such as SimpleTransformers and PyTorch, installed to use these
   functions effectively.
+
+### Full Example
+
+To see a full example of saving and loading a `.vst` file,
+see [examples/basic.py](https://github.com/trialandsuccess/verysimpletransformers/tree/master/examples/basic.py)
 
 ## CLI
 
@@ -172,6 +167,9 @@ Here's an example of starting a server for a classification model:
 vst serve ./classification.vst
 ./classification.vst serve 
 ```
+
+For more examples,
+see [examples/basic.sh](https://github.com/trialandsuccess/verysimpletransformers/tree/master/examples/basic.sh)
 
 ### Notes
 
