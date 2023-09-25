@@ -29,13 +29,16 @@ dependencies = [
     "configuraptor >= 1.18",
     "tqdm",
     "questionary",
+    "yarl",
 ]
 
 [project.optional-dependencies]
+
 dev = [
     "hatch",
     "python-semantic-release<8",
     "su6[all]",
+    "types-requests",
 ]
 
 
