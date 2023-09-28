@@ -14,6 +14,7 @@ from pickle import UnpicklingError  # nosec
 import dill  # nosec
 import torch
 from configuraptor import asbytes
+from configuraptor.helpers import as_binaryio
 from tqdm import tqdm
 
 from .exceptions import BaseVSTException, CorruptedModelException
@@ -31,7 +32,6 @@ from .support import (
     DummyTqdm,
     RedirectStdStreams,
     TqdmProgress,
-    as_binaryio,
     devnull,
     dummy_tqdm,
     write_bundle,

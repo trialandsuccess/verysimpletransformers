@@ -1,31 +1,22 @@
 import io
-import logging
 import typing
 import zlib
 from pathlib import Path
 
 import dill
 import pandas as pd
-import pytest
 import torch.cuda
 from configuraptor import asbytes
+from configuraptor.helpers import as_binaryio
 from simpletransformers.classification import ClassificationArgs, ClassificationModel
 
 from src.verysimpletransformers.core import (
-    _from_vst,
-    from_vst,
-    from_vst_with_metadata,
-    run_metadata_checks,
-    simple_load,
     to_vst,
-    upgrade_metadata,
     write_bundle,
 )
-from src.verysimpletransformers.exceptions import CorruptedModelException, custom_excepthook
-from src.verysimpletransformers.metadata import compare_versions, get_metadata
-from src.verysimpletransformers.metadata_schema import Metadata, MetaHeader, Version
-from src.verysimpletransformers.support import as_binaryio
-from src.verysimpletransformers.types import DummyModel, SimpleTransformerProtocol
+from src.verysimpletransformers.metadata import get_metadata
+from src.verysimpletransformers.metadata_schema import Metadata, MetaHeader
+from src.verysimpletransformers.types import DummyModel
 from src.verysimpletransformers.versioning import get_version
 
 

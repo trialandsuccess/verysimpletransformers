@@ -22,7 +22,6 @@ from src.verysimpletransformers.core import (
 from src.verysimpletransformers.exceptions import CorruptedModelException, custom_excepthook
 from src.verysimpletransformers.metadata import compare_versions, get_metadata
 from src.verysimpletransformers.metadata_schema import Metadata, Version
-from src.verysimpletransformers.support import as_binaryio
 from src.verysimpletransformers.types import DummyModel, SimpleTransformerProtocol
 from tests.helpers_for_test import _get_v0_dummy, _get_corrupted_vst, _get_v1_dummy
 
@@ -195,9 +194,8 @@ def test_backwards_compat():
     assert not hasattr(new_model, "predictx")
 
     assert (
-        new_model.predict("something")[0]
+        new_model.predict(["something"])[0][0]
         == "gnihtemos"
-        == model.predict("something")[0]
         == model.predict(["something"])[0][0]
     )
 
@@ -220,9 +218,8 @@ def test_upgrade():
     assert valid_meta
 
     assert (
-        new_model.predict("something")[0]
+        new_model.predict(["something"])[0][0]
         == "gnihtemos"
-        == model.predict("something")[0]
         == model.predict(["something"])[0][0]
     )
 

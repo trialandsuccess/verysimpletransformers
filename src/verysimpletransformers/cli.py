@@ -6,6 +6,7 @@ import typing
 import questionary
 import typer
 from configuraptor import BinaryConfig
+from configuraptor.helpers import as_binaryio
 from rich import print
 
 from .core import (
@@ -17,7 +18,7 @@ from .core import (
     upgrade_metadata,
 )
 from .exceptions import CorruptedModelException, custom_excepthook
-from .support import RedirectStdStreams, as_binaryio, devnull, has_stdin
+from .support import RedirectStdStreams, devnull, has_stdin
 from .types import SimpleTransformerProtocol
 
 if typing.TYPE_CHECKING:  # pragma: no cover
