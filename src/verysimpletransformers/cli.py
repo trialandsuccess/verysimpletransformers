@@ -91,7 +91,7 @@ def run_stdin(filename: str) -> None:  # pragma: no cover
 
     for prompt in sys.stdin:
         with RedirectStdStreams(stdout=devnull, stderr=devnull):
-            prediction = model.predict(prompt)[0][0]
+            prediction = model.predict([prompt])[0][0]
         print(prediction)
 
 

@@ -38,6 +38,9 @@ class DummyModel:
     #     return target[::-1], None
 
     def predict(self, to_predict: list[str]) -> tuple[list[str] | npt.NDArray[numpy.int32], npt.NDArray[np.float64]]:
+        """
+        Dummy 'predict' just reverses the string for each input.
+        """
         return [_[::-1] for _ in to_predict], np.ndarray(0)
 
 

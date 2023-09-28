@@ -275,6 +275,37 @@ structure is useful for working with these files effectively. The format consist
 
 ```
 
+## Extra's
+
+### Drive
+
+To enable integration with Google Drive, this extra uses the
+library [drive-in](https://github.com/robinvandernoord/drive-in) to enable uploading and downloading models from Drive.
+
+```bash
+pip install verysimpletransformers[drive]
+```
+
+```python
+from verysimpletransformers.drive import to_drive, from_drive
+
+model: ClassificationModel  # or some other model
+
+drive_url = to_drive(model)
+# ...
+
+new_model: ClassificationModel = from_drive(drive_url)
+```
+
+**Limitations:**
+
+- Due to limitations with oauth2 (without using a private key, which is not feasible for an open source project),
+  you can only access files created by this app (i.e. uploaded with `to_drive`).
+- By default, you're redirected to https://oauth.trialandsuccess.nl/callback after authenticating your Google account.
+  This page runs [oauth-echoer](https://github.com/trialandsuccess/oauth-echoer) and simply returns the access token from the query arguments.
+  If you want to change this endpoint, you can pass a `client_id` and `redirect_uri` to the Drive functions.
+  Doing so requires an oauth app with `drive.file` permissions.
+
 ## License
 
 `verysimpletransformers` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.

@@ -38,6 +38,24 @@ class CorruptedModelException(BaseVSTException, ValueError):
         super().__init__(msg)
 
 
+extras = typing.Literal["drive"]
+
+
+class ExtraNotInstalledError(BaseVSTException):  # pragma: no cover
+    """
+    Raised when trying to run 'extra' functionality without having it installed.
+    """
+
+    def __init__(self, extra: extras) -> None:
+        """
+        Write error boilerplate.
+        """
+        super().__init__(
+            f"You tried to use functionality of the `{extra}` extra without having it installed. "
+            f"Try: `pip install verysimpletransformers[{extra}]`"
+        )
+
+
 def custom_excepthook(
     exc_type: typing.Type[BaseException], exc_value: BaseException, _: types.TracebackType | None
 ) -> None:

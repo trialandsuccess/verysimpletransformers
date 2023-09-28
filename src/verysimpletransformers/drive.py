@@ -7,21 +7,20 @@ from __future__ import annotations
 
 import io
 import typing
-import warnings
 from pathlib import Path
+
+from .core import from_vst, to_vst
+from .exceptions import ExtraNotInstalledError
+from .types import SimpleTransformerProtocol
+
+CLIENT_ID = "327892950221-uaah9475qfsfp64s6nqa3o15a9eh3p67.apps.googleusercontent.com"
+REDIRECT_URI = "https://oauth.trialandsuccess.nl/callback"
 
 try:
     from drive_in import DriveSingleton
     from drive_in.helpers import extract_google_id
-except ImportError as e:
-    warnings.warn(
-        "drive extension not installed. from_drive and to_drive functionality will not be available.",
-        category=ImportWarning,
-        source=e,
-    )
-
-from . import from_vst, to_vst
-from .types import SimpleTransformerProtocol
+except ImportError as e:  # pragma: no cover
+    raise ExtraNotInstalledError("drive") from e
 
 
 def to_drive(
@@ -29,11 +28,27 @@ def to_drive(
     filename: str = None,
     folder: str = None,
     chunks_size_mb: int = 25,
-) -> str:  # pragma: no cover
+    # auth:
+    client_id: str = None,
+    redirect_uri: str = None,
+) -> str:
     """
     Simplified API to upload a (vst) file to Drive.
+
+    Args:
+        # common:
+        file_path:       a running model or path to model file to save to drive
+        filename:        the new name on google drive (default will be guessed from file path or model class name)
+        folder:          google drive folder id to upload to
+        # more rare:
+        chunks_size_mb:  customize how many MB should be uploaded for each chunk
+        client_id:       optional, for custom oauth
+        redirect_uri:    optional, for custom oauth
     """
-    drive = DriveSingleton()  # will authenticate only on creation of first instance.
+    drive = DriveSingleton(
+        client_id=client_id or CLIENT_ID,
+        redirect_uri=redirect_uri or REDIRECT_URI,
+    )  # will authenticate only on creation of first instance.
 
     file_obj: str | Path | typing.BinaryIO
     if isinstance(file_path, SimpleTransformerProtocol):
@@ -46,23 +61,32 @@ def to_drive(
     return drive.upload(file_obj, filename, folder, chunks_size_mb)
 
 
-def from_drive(url_or_id: str) -> SimpleTransformerProtocol:
-    drive = DriveSingleton()
+def from_drive(
+    url_or_id: str,
+    save_to: typing.Optional[str | Path] = None,
+    # auth:
+    client_id: str = None,
+    redirect_uri: str = None,
+) -> SimpleTransformerProtocol:
+    """
+    Download a model from drive and load it back into memory.
+
+    Args:
+        # common:
+        url_or_id:    ID or URL to the file (must be created before by `to_drive`)
+        save_to:      if the file should also be saved to disk, specify where
+        # more rare
+        client_id:    optional, for custom oauth
+        redirect_uri: optional, for custom oauth
+    """
+    drive = DriveSingleton(
+        client_id=client_id or CLIENT_ID,
+        redirect_uri=redirect_uri or REDIRECT_URI,
+    )  # will authenticate only on creation of first instance.
 
     file_id = extract_google_id(url_or_id)
 
-    data = drive.download(file_id)
+    target = save_to or io.BytesIO()
+    drive.download(file_id, target)
 
-    return from_vst(data)
-
-
-def main() -> list[str]:
-    # model = DummyModel()
-    #
-    # return to_drive(model)
-
-    model = from_drive("https://drive.google.com/file/d/1r1ETM7GyRwyGw1ziPmymkEtL--Hx2ZwP/view?usp=drive_link")
-
-    result, _ = model.predict(["Hello there"])
-    print(result)
-    return typing.cast(list[str], result)
+    return from_vst(target)
