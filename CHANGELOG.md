@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.0 (2023-09-28)
+
+### Feature
+
+* Added `drive` extra via `drive-in` library ([`634e250`](https://github.com/trialandsuccess/verysimpletransformers/commit/634e250690c091c5b527b9fd4bd9bcc660c5e88c))
+* **drive:** WIP to also add Drive Downloads (directly back to into a model) ([`e89b727`](https://github.com/trialandsuccess/verysimpletransformers/commit/e89b72762c4d76f4ca1f9442317d47a03517051c))
+* **drive:** Add simple google drive api to store models ([`cf37a27`](https://github.com/trialandsuccess/verysimpletransformers/commit/cf37a271e17a479a2482d9a325a8beed6aa38a6c))
+
 ## v0.1.2 (2023-09-22)
 
 ### Documentation
