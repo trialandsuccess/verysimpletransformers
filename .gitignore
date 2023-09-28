@@ -10,3 +10,4 @@ venv*
 *.pyc
 dist/
 htmlcov/
+coverage.json

@@ -26,16 +26,23 @@ dependencies = [
     "typer[all]",
     "simpletransformers",
     "torch",
-    "configuraptor >= 1.18",
+    "configuraptor >= 1.20",
     "tqdm",
     "questionary",
+    "yarl",
 ]
 
 [project.optional-dependencies]
+
+drive = [
+    "drive-in"
+]
+
 dev = [
     "hatch",
     "python-semantic-release<8",
     "su6[all]",
+    "types-requests",
 ]
 
 

@@ -14,6 +14,7 @@ from pickle import UnpicklingError  # nosec
 import dill  # nosec
 import torch
 from configuraptor import asbytes
+from configuraptor.helpers import as_binaryio
 from tqdm import tqdm
 
 from .exceptions import BaseVSTException, CorruptedModelException
@@ -31,7 +32,6 @@ from .support import (
     DummyTqdm,
     RedirectStdStreams,
     TqdmProgress,
-    as_binaryio,
     devnull,
     dummy_tqdm,
     write_bundle,
@@ -42,13 +42,18 @@ from .versioning import get_version
 if typing.TYPE_CHECKING:  # pragma: no cover
     from .types import AllSimpletransformersModels
 
+    SimpleTransformer = typing.Union[SimpleTransformerProtocol, AllSimpletransformersModels]
+
+else:
+    SimpleTransformer = typing.Union[SimpleTransformerProtocol, "AllSimpletransformersModels"]
+
 ZeroThroughNine = typing.Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 DEFAULT_COMPRESSION: ZeroThroughNine = 1
 
 
 def to_vst(
-    model: "AllSimpletransformersModels",
+    model: SimpleTransformer,
     output_file: str | Path | typing.BinaryIO | None,
     compression: bool | ZeroThroughNine = DEFAULT_COMPRESSION,
 ) -> typing.BinaryIO:
@@ -91,9 +96,7 @@ def to_vst(
 bundle_model = to_vst
 
 
-def load_compressed_model(
-    compressed: bytes, device: str, progress: TqdmProgress = dummy_tqdm
-) -> "AllSimpletransformersModels":
+def load_compressed_model(compressed: bytes, device: str, progress: TqdmProgress = dummy_tqdm) -> SimpleTransformer:
     """
     Load compressed bytes into an actual simple transformers model, move cuda settings around.
     """
@@ -106,7 +109,7 @@ def load_compressed_model(
 
     # load + fix cuda (pt1):
     try:
-        result: "AllSimpletransformersModels" = CudaUnpickler.loads(compressed, device=device)
+        result: SimpleTransformer = CudaUnpickler.loads(compressed, device=device)
     except UnpicklingError as e:
         raise CorruptedModelException("pickling", e) from e
 
@@ -193,7 +196,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
         with_model: typing.Literal[True] = True,
         with_progress: bool = True,
         device: str = "auto",
-    ) -> tuple["AllSimpletransformersModels", Metadata, bool]:
+    ) -> tuple[SimpleTransformer, Metadata, bool]:
         ...
 
     @typing.overload
@@ -203,7 +206,7 @@ if typing.TYPE_CHECKING:  # pragma: no cover
         with_model: typing.Literal[True] = True,
         with_progress: bool = True,
         device: str = "auto",
-    ) -> tuple["AllSimpletransformersModels", None, bool]:
+    ) -> tuple[SimpleTransformer, None, bool]:
         ...
 
     @typing.overload
@@ -233,7 +236,7 @@ def _from_vst(
     with_model: bool = True,
     with_progress: bool = True,
     device: str = "auto",
-) -> tuple[typing.Optional["AllSimpletransformersModels"], typing.Optional[Metadata], bool]:
+) -> tuple[typing.Optional[SimpleTransformer], typing.Optional[Metadata], bool]:
     """
     Load the model from a (possibly compressed) dill.
 
@@ -289,7 +292,7 @@ def _from_vst(
         raise CorruptedModelException("unknown", e) from e
 
 
-def from_vst(input_file: str | Path | typing.BinaryIO, device: str = "auto") -> "AllSimpletransformersModels":
+def from_vst(input_file: str | Path | typing.BinaryIO, device: str = "auto") -> SimpleTransformer:
     """
     Given a file path-like object, load the Simple Transformers model back into memory.
     """
@@ -304,7 +307,7 @@ def from_vst(input_file: str | Path | typing.BinaryIO, device: str = "auto") -> 
 
 def from_vst_with_metadata(
     input_file: str | Path | typing.BinaryIO, device: str = "auto"
-) -> tuple["AllSimpletransformersModels", Metadata, bool]:
+) -> tuple[SimpleTransformer, Metadata, bool]:
     """
     Given a file path-like object, load the Simple Transformers model back into memory.
 
@@ -357,7 +360,7 @@ load_model = from_vst
 load_model_with_metadata = from_vst_with_metadata
 
 
-def simple_load(filename: str | "AllSimpletransformersModels") -> tuple["AllSimpletransformersModels", str]:
+def simple_load(filename: str | SimpleTransformer) -> tuple[SimpleTransformer, str]:
     """
     Helper function for the cli.
 

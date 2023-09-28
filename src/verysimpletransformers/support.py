@@ -3,14 +3,11 @@ Helper functionality.
 """
 from __future__ import annotations
 
-import contextlib
 import io
 import os
 import select
 import sys
 import typing
-from io import BytesIO
-from pathlib import Path
 from types import TracebackType
 
 import torch
@@ -27,36 +24,6 @@ def write_bundle(output_file: typing.BinaryIO, *to_write: bytes) -> None:
     with output_file as f_out:
         for element in to_write:
             f_out.write(element)
-
-
-@contextlib.contextmanager
-def uncloseable(fd: typing.BinaryIO) -> typing.Generator[typing.BinaryIO, typing.Any, None]:
-    """
-    Context manager which turns the fd's close operation to no-op for the duration of the context.
-    """
-    close = fd.close
-    fd.close = lambda: None  # type: ignore
-    yield fd
-    fd.close = close  # type: ignore
-
-
-def as_binaryio(file: str | Path | typing.BinaryIO | None, mode: typing.Literal["rb", "wb"] = "rb") -> typing.BinaryIO:
-    """
-    Convert a number of possible 'file' descriptions into a single BinaryIO interface.
-    """
-    if isinstance(file, str):
-        file = Path(file)
-    if isinstance(file, Path):
-        file = file.open(mode)
-    if file is None:
-        file = BytesIO()
-    if isinstance(file, io.BytesIO):
-        # so .read() works after .write():
-        file.seek(0)
-        # so the with-statement doesn't close the in-memory file:
-        file = uncloseable(file)  # type: ignore
-
-    return file
 
 
 class CudaUnpickler(Unpickler):  # type: ignore

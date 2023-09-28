@@ -16,26 +16,32 @@ class DummyModel:
 
     device = "cpu"
 
-    @typing.overload
-    def predict(self, target: str, **__: typing.Any) -> tuple[str, None]:  # pragma: no cover
-        """
-        If you enter a single input, you get a single output.
-        """
+    # @typing.overload
+    # def predict(self, target: str, **__: typing.Any) -> tuple[str, None]:  # pragma: no cover
+    #     """
+    #     If you enter a single input, you get a single output.
+    #     """
+    #
+    # @typing.overload
+    # def predict(self, target: list[str], **__: typing.Any) -> tuple[list[str], None]:  # pragma: no cover
+    #     """
+    #     If you enter a list of inputs, you get a list of outputs.
+    #     """
+    #
+    # def predict(self, target: str | list[str], **__: typing.Any) -> tuple[str | list[str], None]:
+    #     """
+    #     Simulate a machine learning response by just returning a reversed echo of the input.
+    #     """
+    #     if isinstance(target, list):
+    #         return [self.predict(_)[0] for _ in target], None
+    #
+    #     return target[::-1], None
 
-    @typing.overload
-    def predict(self, target: list[str], **__: typing.Any) -> tuple[list[str], None]:  # pragma: no cover
+    def predict(self, to_predict: list[str]) -> tuple[list[str] | npt.NDArray[numpy.int32], npt.NDArray[np.float64]]:
         """
-        If you enter a list of inputs, you get a list of outputs.
+        Dummy 'predict' just reverses the string for each input.
         """
-
-    def predict(self, target: str | list[str], **__: typing.Any) -> tuple[str | list[str], None]:
-        """
-        Simulate a machine learning response by just returning a reversed echo of the input.
-        """
-        if isinstance(target, list):
-            return [self.predict(_)[0] for _ in target], None
-
-        return target[::-1], None
+        return [_[::-1] for _ in to_predict], np.ndarray(0)
 
 
 if typing.TYPE_CHECKING:  # pragma: no cover
