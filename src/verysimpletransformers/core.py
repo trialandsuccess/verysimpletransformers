@@ -305,6 +305,16 @@ def from_vst(input_file: str | Path | typing.BinaryIO, device: str = "auto") -> 
     return result
 
 
+def dump_to_disk(model: SimpleTransformer | str | Path | typing.BinaryIO, output_dir: str | Path = "outputs") -> None:
+    """
+    Dump a running model or a vst back to the original model files (pytorch_model.bin, config.json, vocab.txt etc.).
+    """
+    if not isinstance(model, SimpleTransformerProtocol):
+        model = from_vst(model)
+
+    model.save_model(model=model.model, output_dir=str(output_dir))
+
+
 def from_vst_with_metadata(
     input_file: str | Path | typing.BinaryIO, device: str = "auto"
 ) -> tuple[SimpleTransformer, Metadata, bool]:

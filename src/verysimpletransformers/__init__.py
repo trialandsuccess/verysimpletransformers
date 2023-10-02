@@ -7,7 +7,7 @@ This file exposes 'app' to the module.
 # SPDX-License-Identifier: MIT
 
 from .cli import app
-from .core import bundle_model, from_vst, load_model, to_vst
+from .core import bundle_model, dump_to_disk, from_vst, load_model, to_vst
 
 __all__ = [
     # cli
@@ -17,4 +17,5 @@ __all__ = [
     "from_vst",
     "load_model",
     "bundle_model",
+    "dump_to_disk",
 ]

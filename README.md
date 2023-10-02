@@ -277,6 +277,32 @@ structure is useful for working with these files effectively. The format consist
 
 ```
 
+### Converting a `vst` file back into the original model files
+
+If you want to retrieve the original model files from a saved vst file, you can use the `dump_to_disk()` function:
+
+```python
+from verysimpletransformers import dump_to_disk
+
+vst_path = 'my_model.vst'
+
+# Convert vst file to original model files
+dump_to_disk(vst_path,  # a running model or path to a .vst file
+             'model_files/',  # optional, default is 'outputs/'
+             )
+```
+
+This will extract the model contents from the vst file and save the individual components in the `model_files/`
+directory:
+
+- `pytorch_model.bin` - Model weights
+- `tokenizer.json` - Tokenizer configuration
+- `vocab.txt` - Vocabulary
+- etc.
+
+This allows you to easily retrieve the original model files from a vst save file in order to upload or share the model
+to e.g. huggingface.
+
 ## Extra's
 
 ### Drive
@@ -304,7 +330,8 @@ new_model: ClassificationModel = from_drive(drive_url)
 - Due to limitations with oauth2 (without using a private key, which is not feasible for an open source project),
   you can only access files created by this app (i.e. uploaded with `to_drive`).
 - By default, you're redirected to https://oauth.trialandsuccess.nl/callback after authenticating your Google account.
-  This page runs [oauth-echoer](https://github.com/trialandsuccess/oauth-echoer) and simply returns the access token from the query arguments.
+  This page runs [oauth-echoer](https://github.com/trialandsuccess/oauth-echoer) and simply returns the access token
+  from the query arguments.
   If you want to change this endpoint, you can pass a `client_id` and `redirect_uri` to the Drive functions.
   Doing so requires an oauth app with `drive.file` permissions.
 

@@ -13,6 +13,7 @@ from .core import (
     DEFAULT_COMPRESSION,
     ZeroThroughNine,
     _from_vst,
+    dump_to_disk,
     from_vst_with_metadata,
     simple_load,
     upgrade_metadata,
@@ -27,7 +28,6 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     ModelOrFilename = typing.Union[str, AllSimpletransformersModels]
 else:
     ModelOrFilename = typing.Union[str, "AllSimpletransformersModels"]
-
 
 app = typer.Typer()
 
@@ -122,6 +122,18 @@ def upgrade(
     upgrade_metadata(filename, output_file, compression=typing.cast(ZeroThroughNine, compression))
 
 
+def dump(
+    filename: str,
+    output_file: str = None,
+) -> None:  # pragma: no cover
+    """
+    Dump the vst model back into the original model files.
+    """
+    output_file = output_file or "./outputs"
+    dump_to_disk(filename, output_file)
+    print(f"Saved {filename} to {output_file}", file=sys.stderr)
+
+
 def show_info(filename: str) -> None:
     """
     Show metadata info about this model.
@@ -191,6 +203,12 @@ def show_help(with_welcome: bool = True) -> None:
         f"    --compression <LEVEL>, -c <LEVEL>     Specify the level of compression "
         f"(default: {DEFAULT_COMPRESSION} or previous value)"
     )
+    print("- 'dump': Restore the original model files from this vst file.")
+    print("  Options for 'dump':")
+    print(
+        "    --output <FILE>,       -o <FILE>      Specify which directory the files will be written to "
+        "(default: 'outputs')"
+    )
     print("- 'show': Show the metadata stored in the model file.")
 
     print("\nExample:")
@@ -239,6 +257,7 @@ def prompt_user(args: list[str]) -> None:  # pragma: no cover
             questionary.Choice(
                 "Upgrade", "upgrade", disabled="Fully up-to-date!" if valid_meta else None, shortcut_key="u"
             ),
+            questionary.Choice("Dump to disk", "dump", shortcut_key="d"),
             questionary.Choice("Exit", None, shortcut_key="e"),
         ],
         use_shortcuts=True,
@@ -253,6 +272,8 @@ def prompt_user(args: list[str]) -> None:  # pragma: no cover
             serve(model)
         case "upgrade":
             upgrade(model_name)
+        case "dump":
+            dump(model_name)
         case None:
             # = exit or ctrl-c
             return
@@ -302,6 +323,12 @@ def main(
 
         case [_, "vst", "upgrade"]:
             upgrade(args[0], output_file=output, compression=compression)
+
+        case ["dump", _, "vst"]:
+            dump(args[1], output_file=output)
+
+        case [_, "vst", "dump"]:
+            dump(args[0], output_file=output)
 
         case ["show", _, "vst"]:
             show_info(args[1])

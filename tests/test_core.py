@@ -17,7 +17,7 @@ from src.verysimpletransformers.core import (
     simple_load,
     to_vst,
     upgrade_metadata,
-    write_bundle,
+    write_bundle, dump_to_disk,
 )
 from src.verysimpletransformers.exceptions import CorruptedModelException, custom_excepthook
 from src.verysimpletransformers.metadata import compare_versions, get_metadata
@@ -208,11 +208,13 @@ def test_upgrade():
     upgraded = io.BytesIO()
     assert upgrade_metadata(fp, upgraded, compression=None)
 
-    with fp.open("rb") as f:
+    # fp should still countain the old metadata
+    with fp.open("rb") as f, pytest.warns(UserWarning):
         _, metadata, valid_meta = _from_vst(f, with_model=False, with_metadata=True)
 
     assert not valid_meta
 
+    # 'upgraded' should contain the new metadata
     new_model, metadata, valid_meta = from_vst_with_metadata(upgraded)
 
     assert valid_meta
@@ -223,7 +225,35 @@ def test_upgrade():
         == model.predict(["something"])[0][0]
     )
 
-    assert not upgrade_metadata(upgraded, io.BytesIO())
+    with pytest.warns(UserWarning):
+        assert not upgrade_metadata(upgraded, io.BytesIO())
+
+
+def remove_everything(path: Path):
+    if path.is_dir():
+        for child in path.iterdir():
+            if child.is_file():
+                child.unlink()  # Remove files
+            elif child.is_dir():
+                remove_everything(child)  # Recursively remove directories
+
+    # After removing all contents, remove the directory itself
+    path.rmdir()
+
+def test_to_disk():
+    outputs = Path("test_to_disk_outputs")
+
+    try:
+        _get_v1_dummy(Path("pytest1.vst"))
+        dump_to_disk('pytest1.vst', outputs)
+
+        assert (outputs / "pytorch_model.bin").exists()
+        assert (outputs / "vocab.txt").exists()
+        assert (outputs / "tokenizer.json").exists()
+
+    finally:
+        if outputs.exists():
+            remove_everything(outputs)
 
 def test_custom_excepthook(capsys):
     my_exception = ValueError("catch")

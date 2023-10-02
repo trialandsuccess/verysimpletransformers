@@ -10,7 +10,7 @@ from src.verysimpletransformers.serve import MachineLearningModelHandler
 
 @pytest.fixture(scope="module")
 def custom_http_server():
-    model = from_vst("pytest0.vst")
+    model = from_vst("pytest1.vst")
 
     httpd = http.server.HTTPServer(("localhost", 8000), MachineLearningModelHandler.bind(model))
 

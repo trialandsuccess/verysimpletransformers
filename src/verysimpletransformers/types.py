@@ -1,50 +1,16 @@
 """
 Mostly for mypy (and pytest).
 """
+from __future__ import annotations
 
+import os
+import sys
 import typing
 
-import numpy
 import numpy as np
-import numpy.typing as npt
-
-
-class DummyModel:
-    """
-    Replacement for actual (big) ML model, useful for pytesting.
-    """
-
-    device = "cpu"
-
-    # @typing.overload
-    # def predict(self, target: str, **__: typing.Any) -> tuple[str, None]:  # pragma: no cover
-    #     """
-    #     If you enter a single input, you get a single output.
-    #     """
-    #
-    # @typing.overload
-    # def predict(self, target: list[str], **__: typing.Any) -> tuple[list[str], None]:  # pragma: no cover
-    #     """
-    #     If you enter a list of inputs, you get a list of outputs.
-    #     """
-    #
-    # def predict(self, target: str | list[str], **__: typing.Any) -> tuple[str | list[str], None]:
-    #     """
-    #     Simulate a machine learning response by just returning a reversed echo of the input.
-    #     """
-    #     if isinstance(target, list):
-    #         return [self.predict(_)[0] for _ in target], None
-    #
-    #     return target[::-1], None
-
-    def predict(self, to_predict: list[str]) -> tuple[list[str] | npt.NDArray[numpy.int32], npt.NDArray[np.float64]]:
-        """
-        Dummy 'predict' just reverses the string for each input.
-        """
-        return [_[::-1] for _ in to_predict], np.ndarray(0)
-
 
 if typing.TYPE_CHECKING:  # pragma: no cover
+    import numpy.typing as npt
     from simpletransformers.classification import (
         ClassificationModel,
         MultiLabelClassificationModel,
@@ -59,6 +25,8 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     from simpletransformers.retrieval import RetrievalModel
     from simpletransformers.seq2seq import Seq2SeqModel
     from simpletransformers.t5 import T5Model
+    from torch.optim.lr_scheduler import LRScheduler
+    from transformers import Adafactor, PreTrainedModel
 
     AllClassificationModels = ClassificationModel | MultiLabelClassificationModel | MultiModalClassificationModel
 
@@ -73,8 +41,51 @@ if typing.TYPE_CHECKING:  # pragma: no cover
         | RetrievalModel
         | Seq2SeqModel
         | T5Model
-        | DummyModel
+        | "DummyModel"
     )
+
+
+class DummyModel:
+    """
+    Replacement for actual (big) ML model, useful for pytesting.
+    """
+
+    device = "cpu"
+    model = None
+
+    def predict(self, to_predict: list[str]) -> tuple[list[str] | npt.NDArray[np.int32], npt.NDArray[np.float64]]:
+        """
+        Dummy 'predict' just reverses the string for each input.
+        """
+        return [_[::-1] for _ in to_predict], np.ndarray(0)
+
+    def save_model(
+        self,
+        output_dir: str = None,
+        optimizer: Adafactor = None,
+        scheduler: LRScheduler = None,
+        model: PreTrainedModel = None,
+        results: dict[str, typing.Any] = None,
+    ) -> None:
+        """
+        Dummy model has nothing to save, so just print.
+        """
+        print("Dummy model has no files; Saving empty files to disk.", file=sys.stderr)
+        output_dir = output_dir or "outputs/"
+        print(f"{output_dir=}; {optimizer=}; {scheduler=}; {model=}; {self.model=}; {results=}", file=sys.stderr)
+
+        expected_files = [
+            "config.json",
+            "model_args.json",
+            "pytorch_model.bin",
+            "special_tokens_map.json",
+            "tokenizer_config.json",
+            "tokenizer.json",
+            "training_args.bin",
+            "vocab.txt",
+        ]
+
+        os.system(f"mkdir {output_dir}; " f"cd {output_dir}; " f"touch {' '.join(expected_files)}")  # nosec
 
 
 @typing.runtime_checkable
@@ -86,8 +97,9 @@ class SimpleTransformerProtocol(typing.Protocol):
     """
 
     device: str
+    model: PreTrainedModel  # internal huggingface.transformers model
 
-    def predict(self, to_predict: list[str]) -> tuple[list[str] | npt.NDArray[numpy.int32], npt.NDArray[np.float64]]:
+    def predict(self, to_predict: list[str]) -> tuple[list[str] | npt.NDArray[np.int32], npt.NDArray[np.float64]]:
         """
         Simple Transformers have a predict function that calls a trained model on some inputs.
 
@@ -102,6 +114,18 @@ class SimpleTransformerProtocol(typing.Protocol):
         Additionally, a nested numpy array of floats is returned containing the predictions for each label:
         E.g. for 2 inputs and 3 labels:
         array([[-1.06826222, -2.81530643,  4.42381239], [-1.54674757, -2.70588231,  4.82942677]]))
+        """
+
+    def save_model(
+        self,
+        output_dir: str = None,
+        optimizer: Adafactor = None,
+        scheduler: LRScheduler = None,
+        model: PreTrainedModel = None,
+        results: dict[str, typing.Any] = None,
+    ) -> None:
+        """
+        Save a model from memory back to disk.
         """
 
     # real models have more of course, but these are the properties expected by our code.

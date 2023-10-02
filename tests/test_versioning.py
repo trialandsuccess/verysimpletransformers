@@ -1,3 +1,5 @@
+import pytest
+
 from src.verysimpletransformers.versioning import define_version, get_version
 
 
@@ -31,7 +33,9 @@ def test_versioning():
     assert latest is v2 and v2 == latest
     assert latest is not v1 and v1 != latest
 
-    v3 = get_version(MyClass, 3)
+    with pytest.warns(UserWarning):
+        v3 = get_version(MyClass, 3)
+
     assert v3 is v2 is latest
 
     assert get_version(NotVersioned) is None
