@@ -30,6 +30,7 @@ dependencies = [
     "tqdm",
     "questionary",
     "yarl",
+    "plumbum",
 ]
 
 [project.optional-dependencies]
