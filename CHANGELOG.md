@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.1 (2023-10-02)
+
+### Fix
+
+* **cli:** Interactive run only returned the  first character for seq2seq ([`3fb5b27`](https://github.com/trialandsuccess/verysimpletransformers/commit/3fb5b277389cfd6697bc0e584e4d07b837e3d377))
+* **cli:** Add plumbum as dependency ([`ead5ade`](https://github.com/trialandsuccess/verysimpletransformers/commit/ead5aded817c20fd9f7605ecfaa4abc137a36097))
+
 ## v0.3.0 (2023-10-02)
 
 ### Feature
