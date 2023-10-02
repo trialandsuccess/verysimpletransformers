@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.2 (2023-10-02)
+
+### Fix
+
+* **cli:** Minor tweaks and improvements to run, serve and stdin ([`d5f3035`](https://github.com/trialandsuccess/verysimpletransformers/commit/d5f3035d966933380739a11d90431dd520ec4e8d))
+
 ## v0.3.1 (2023-10-02)
 
 ### Fix
