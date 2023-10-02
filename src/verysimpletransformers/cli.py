@@ -7,6 +7,7 @@ import questionary
 import typer
 from configuraptor import BinaryConfig
 from configuraptor.helpers import as_binaryio
+from numpy import ndarray
 from rich import print
 
 from .core import (
@@ -74,8 +75,13 @@ def run_interactive(filename: ModelOrFilename) -> None:  # pragma: no cover
         if prompt := questionary.text("", style=generate_custom_style(secondary_color="")).ask():
             with RedirectStdStreams(stdout=devnull, stderr=devnull):
                 # model prints are hidden by writing to /dev/null
+                prediction = model.predict([prompt])[0]
 
-                prediction = model.predict(prompt)[0][0]
+                if isinstance(prediction, ndarray):
+                    # e.g. classification
+                    prediction = prediction[0]
+                # else: e.g. seq2seq
+
             print(prediction)
         elif questionary.confirm(
             "Would you like to exit?", default=False, style=generate_custom_style(secondary_color="#f44336")
