@@ -7,7 +7,6 @@ import questionary
 import typer
 from configuraptor import BinaryConfig
 from configuraptor.helpers import as_binaryio
-from numpy import ndarray
 from rich import print
 
 from .core import (
@@ -20,6 +19,7 @@ from .core import (
     upgrade_metadata,
 )
 from .exceptions import CorruptedModelException, custom_excepthook
+from .serve import _handle_predictions
 from .support import RedirectStdStreams, devnull, has_stdin
 from .types import SimpleTransformerProtocol
 
@@ -75,12 +75,10 @@ def run_interactive(filename: ModelOrFilename) -> None:  # pragma: no cover
         if prompt := questionary.text("", style=generate_custom_style(secondary_color="")).ask():
             with RedirectStdStreams(stdout=devnull, stderr=devnull):
                 # model prints are hidden by writing to /dev/null
-                prediction = model.predict([prompt])[0]
+                prediction = model.predict([prompt])
 
-                if isinstance(prediction, ndarray):
-                    # e.g. classification
-                    prediction = prediction[0]
-                # else: e.g. seq2seq
+                # extract actual answer:
+                prediction = _handle_predictions(prediction)[0]
 
             print(prediction)
         elif questionary.confirm(
@@ -97,7 +95,8 @@ def run_stdin(filename: str) -> None:  # pragma: no cover
 
     for prompt in sys.stdin:
         with RedirectStdStreams(stdout=devnull, stderr=devnull):
-            prediction = model.predict([prompt])[0][0]
+            prediction = model.predict([prompt])
+            prediction = _handle_predictions(prediction)[0]
         print(prediction)
 
 

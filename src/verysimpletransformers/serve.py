@@ -9,10 +9,28 @@ import json
 import typing
 from urllib.parse import parse_qs
 
-import numpy
+import numpy as np
 
 if typing.TYPE_CHECKING:  # pragma: no cover
+    import numpy.typing as npt
+
     from .types import AllSimpletransformersModels
+
+
+def _handle_predictions(
+    predictions: tuple[list[str] | npt.NDArray[np.int32], npt.NDArray[np.float64]]
+) -> list[str | int]:
+    if len(predictions) == 2:
+        if isinstance(predictions[0], np.ndarray):  # pragma: no cover
+            # happens if binary/numeric labels; e.g. binary classification
+            predictions = predictions[0].tolist()
+        elif isinstance(predictions[1], np.ndarray):
+            # already a list
+            predictions = predictions[0]  # type: ignore
+
+    # if classification with labels: list labels and probabilities is returned
+    # if seq2seq: just a list of output strings is returned
+    return typing.cast(list[str | int], predictions)
 
 
 class MachineLearningModelHandler(http.server.SimpleHTTPRequestHandler):
@@ -33,13 +51,9 @@ class MachineLearningModelHandler(http.server.SimpleHTTPRequestHandler):
         """
         Shortcut to get the outputs from the model based on the inputs.
         """
-        predictions, _ = self.model.predict(inputs)
+        predictions = self.model.predict(inputs)
 
-        if isinstance(predictions, numpy.ndarray):  # pragma: no cover
-            # happens if binary/numeric labels
-            predictions = predictions.tolist()
-
-        return typing.cast(list[str | int], predictions)
+        return _handle_predictions(predictions)
 
     def respond(
         self, response_data: typing.Any, content_type: str = "application/json", status_code: int = 200

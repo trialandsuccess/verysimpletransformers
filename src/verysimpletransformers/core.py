@@ -381,7 +381,7 @@ def simple_load(filename: str | SimpleTransformer) -> tuple[SimpleTransformer, s
         print("Loading model", filename, "...", file=sys.stderr)
         with RedirectStdStreams(stdout=devnull, stderr=devnull):
             model = from_vst(filename)
-        print(f"Done loading {model}!")
+        print(f"Done loading {model}!", file=sys.stderr)
     elif isinstance(filename, SimpleTransformerProtocol):
         model = filename
         filename = str(model)
