@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (2023-10-02)
+
+### Feature
+
+* Add save_to_disk to transform a .vst file back into the original model files ([`8b4497c`](https://github.com/trialandsuccess/verysimpletransformers/commit/8b4497c7b5eedf50bb421b1557de9a5b246c9f4a))
+
 ## v0.2.0 (2023-09-28)
 
 ### Feature
