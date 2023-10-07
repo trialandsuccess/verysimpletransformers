@@ -19,6 +19,7 @@ from .core import (
     upgrade_metadata,
 )
 from .exceptions import CorruptedModelException, custom_excepthook
+from .interactive import input_with_history
 from .serve import _handle_predictions
 from .support import RedirectStdStreams, devnull, has_stdin
 from .types import SimpleTransformerProtocol
@@ -71,8 +72,9 @@ def run_interactive(filename: ModelOrFilename) -> None:  # pragma: no cover
     clear()
     print("Running", model, f"({model_name})" if model_name and model_name != str(model) else "")
 
+    ask = input_with_history()
     while True:
-        if prompt := questionary.text("", style=generate_custom_style(secondary_color="")).ask():
+        if prompt := next(ask):
             with RedirectStdStreams(stdout=devnull, stderr=devnull):
                 # model prints are hidden by writing to /dev/null
                 prediction = model.predict([prompt])
