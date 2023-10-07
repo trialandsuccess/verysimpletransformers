@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.3 (2023-10-07)
+
+### Fix
+
+* **cli:** Use readline to enable history in interactive mode ([`b5fac56`](https://github.com/trialandsuccess/verysimpletransformers/commit/b5fac56e068234e2d617ad2c45f63e47177e9317))
+
 ## v0.3.2 (2023-10-02)
 
 ### Fix
