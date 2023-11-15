@@ -31,7 +31,11 @@ transformers_logger.setLevel(logging.WARNING)
 
 
 def test_metadata():
-    valid_meta = get_metadata(0, 0, "cpu").meta_header
+    meta = get_metadata(0, 0, "cpu")
+
+    assert repr(meta).startswith("Metadata<v1")
+
+    valid_meta = meta.meta_header
 
     assert "MetaHeader<" in repr(valid_meta)
 

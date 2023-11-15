@@ -57,7 +57,7 @@ class MetaHeader(BinaryConfig):  # type: ignore
 
     def __repr__(self) -> str:
         """
-        Pretty representation of the meta data.
+        Pretty representation of the meta header data.
         """
         result = "MetaHeader<"
         for name, field in self._fields.items():
@@ -77,3 +77,9 @@ class Metadata(BinaryConfig):
     meta_length = BinaryField(int, format="H")
     content_length = BinaryField(int, format="Q")
     meta_header = BinaryField(MetaHeader)  # todo: can this be typed better? (Versioned class kinda breaks it)
+
+    def __repr__(self) -> str:
+        """
+        Pretty representation of the top-level metadata.
+        """
+        return f"Metadata<v{self.meta_version} - see .meta_header for more data>"
