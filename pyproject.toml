@@ -36,7 +36,7 @@ dependencies = [
 [project.optional-dependencies]
 
 drive = [
-    "drive-in"
+    "drive-in>=0.1.4"
 ]
 
 dev = [
