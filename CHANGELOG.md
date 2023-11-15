@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.5 (2023-11-15)
+
+### Fix
+
+* Require at least drive-in 0.1.4 with deals with new requests json exception ([`df81a7a`](https://github.com/trialandsuccess/verysimpletransformers/commit/df81a7a9fe4a3e8545673d538b753eb924e5d3bb))
+
 ## v0.3.4 (2023-11-15)
 
 ### Fix
