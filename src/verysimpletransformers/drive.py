@@ -6,6 +6,7 @@ NOTE: This does not really use pytest, since it is very hard to test with the Go
 from __future__ import annotations
 
 import io
+import sys
 import typing
 from pathlib import Path
 
@@ -67,6 +68,7 @@ def from_drive(
     # auth:
     client_id: str = None,
     redirect_uri: str = None,
+    cache: bool = True,
 ) -> SimpleTransformerProtocol:
     """
     Download a model from drive and load it back into memory.
@@ -75,6 +77,7 @@ def from_drive(
         # common:
         url_or_id:    ID or URL to the file (must be created before by `to_drive`)
         save_to:      if the file should also be saved to disk, specify where
+        cache:        store the model in a /tmp/vst/... file, so it can easily be reloaded later?
         # more rare
         client_id:    optional, for custom oauth
         redirect_uri: optional, for custom oauth
@@ -85,6 +88,19 @@ def from_drive(
     )  # will authenticate only on creation of first instance.
 
     file_id = extract_google_id(url_or_id)
+
+    if not save_to and cache:
+        base = Path("/tmp/vst")
+        base.mkdir(exist_ok=True)
+        save_to = base / file_id
+
+    if cache and save_to and Path(save_to).exists():
+        # don't re-download
+        print(
+            "File already exists locally, using this version. Use cache=False to prevent this behavior.",
+            file=sys.stderr,
+        )
+        return from_vst(save_to)
 
     target = save_to or io.BytesIO()
     drive.download(file_id, target)

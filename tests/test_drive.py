@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from src.verysimpletransformers.drive import to_drive, from_drive
 from src.verysimpletransformers.types import DummyModel
@@ -15,6 +16,14 @@ def _drive_integration(file_ids: list[str]):
     file_ids.append(
         file_id
     )
+
+    fp = Path("/tmp/vst") / extract_google_id(file_id)
+    fp.unlink(missing_ok=True)
+
+    assert from_drive(file_id)
+    assert fp.exists()
+    assert from_drive(file_id)
+    fp.unlink(missing_ok=True)
 
     new_model = from_drive(file_id, save_to="pytest-dummy.vst")
 
