@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.4 (2023-11-15)
+
+### Fix
+
+* Add simple repr to metadata ([`dbf3c96`](https://github.com/trialandsuccess/verysimpletransformers/commit/dbf3c9673f76e378fca801d36b72c3ae1d48796e))
+* Bump configuraptor (with typeguard) version requirement ([`458d8cd`](https://github.com/trialandsuccess/verysimpletransformers/commit/458d8cd187ef74326e86e2f088a762eee70e5adf))
+
 ## v0.3.3 (2023-10-07)
 
 ### Fix
