@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2023-11-15)
+
+### Feature
+
+* Add `cache` to from_drive to prevent re-downloading files that exist locally ([`6bf1135`](https://github.com/trialandsuccess/verysimpletransformers/commit/6bf1135797509413679dae632e9c38875fb57208))
+
 ## v0.3.5 (2023-11-15)
 
 ### Fix
