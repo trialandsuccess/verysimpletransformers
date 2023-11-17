@@ -5,7 +5,6 @@ import typing
 
 import questionary
 import typer
-from configuraptor import BinaryConfig
 from configuraptor.helpers import as_binaryio
 from rich import print
 
@@ -20,6 +19,7 @@ from .core import (
 )
 from .exceptions import CorruptedModelException, custom_excepthook
 from .interactive import input_with_history
+from .metadata import show_metadata
 from .serve import _handle_predictions
 from .support import RedirectStdStreams, devnull, has_stdin
 from .types import SimpleTransformerProtocol
@@ -154,17 +154,8 @@ def show_info(filename: str) -> None:
         with as_binaryio(filename) as f:
             model, meta, valid = _from_vst(f, with_metadata=True, with_model=False)
 
-    def show_recursive(obj: typing.Any, level: int = 0) -> None:
-        for option, value in obj.__dict__.items():
-            if option.startswith("_"):
-                continue
-            if isinstance(value, BinaryConfig):
-                print("\t" * level, f"[yellow]{option}[/yellow] ▼")
-                show_recursive(value, level + 1)
-            else:
-                print("\t" * level, f"[yellow]{option}[/yellow] =", value)
-
-    show_recursive(meta)
+    print("[yellow]model class[/yellow] =", type(model))
+    show_metadata(meta)
     print("[yellow]model loaded properly:[/yellow]", isinstance(model, SimpleTransformerProtocol))
     if error:
         print("[red]error:[/red]", error)

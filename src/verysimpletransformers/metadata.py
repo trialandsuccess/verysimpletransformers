@@ -5,11 +5,15 @@ Functions to deal with metadata of `.vst` files.
 import re
 import sys
 import warnings
+from typing import Any
 
 import torch
 import transformers
 from plumbum import local
 from plumbum.cmd import grep
+
+from configuraptor import BinaryConfig
+from rich import print
 
 from .__about__ import __version__
 from .metadata_schema import Metadata, MetaHeader, Version
@@ -129,3 +133,17 @@ def get_metadata(content_length: int, compression_level: int, device: str) -> Me
     meta.meta_header = header
 
     return meta
+
+
+def show_metadata(meta: Metadata):
+    def show_recursive(obj: Any, level: int = 0) -> None:
+        for option, value in obj.__dict__.items():
+            if option.startswith("_"):
+                continue
+            if isinstance(value, BinaryConfig):
+                print("\t" * level, f"[yellow]{option}[/yellow] ▼")
+                show_recursive(value, level + 1)
+            else:
+                print("\t" * level, f"[yellow]{option}[/yellow] =", value)
+
+    show_recursive(meta)
