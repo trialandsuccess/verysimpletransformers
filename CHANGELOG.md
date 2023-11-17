@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.1 (2023-11-17)
+
+### Fix
+
+* Add class name to globals so custom classes are loaded better ([`b96466c`](https://github.com/trialandsuccess/verysimpletransformers/commit/b96466c6cb9c71e9a179ac36456171001b6f6766))
+
 ## v0.4.0 (2023-11-15)
 
 ### Feature
