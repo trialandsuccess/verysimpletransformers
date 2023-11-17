@@ -284,6 +284,12 @@ def _from_vst(
 
         if with_model:
             print(f"{device=}", file=sys.stderr)
+
+            cls = model.__class__
+            clsname = cls.__name__
+            if clsname not in globals():
+                globals()[clsname] = cls
+
         return model, metadata, meta_check_passed
     except BaseVSTException:
         # don't catch our own exceptions!
