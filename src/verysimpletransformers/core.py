@@ -287,8 +287,11 @@ def _from_vst(
 
             cls = model.__class__
             clsname = cls.__name__
-            if clsname not in globals():
-                globals()[clsname] = cls
+            print(
+                f"Tip: run `{clsname} = model.__class__` if you get an error like "
+                f"`Can't pickle <class '__main__.{clsname}'>: attribute lookup {clsname} on __main__ failed`",
+                file=sys.stderr,
+            )
 
         return model, metadata, meta_check_passed
     except BaseVSTException:
