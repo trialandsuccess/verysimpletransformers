@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.2 (2023-11-17)
+
+### Fix
+
+* Adding to globals in a package doesn't work, so just print tip instead ([`b5b037a`](https://github.com/trialandsuccess/verysimpletransformers/commit/b5b037a12f65e2f2fbd4e320a33946a15e00a695))
+
 ## v0.4.1 (2023-11-17)
 
 ### Fix
