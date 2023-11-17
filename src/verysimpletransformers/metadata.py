@@ -9,10 +9,9 @@ from typing import Any
 
 import torch
 import transformers
+from configuraptor import BinaryConfig
 from plumbum import local
 from plumbum.cmd import grep
-
-from configuraptor import BinaryConfig
 from rich import print
 
 from .__about__ import __version__
@@ -135,7 +134,11 @@ def get_metadata(content_length: int, compression_level: int, device: str) -> Me
     return meta
 
 
-def show_metadata(meta: Metadata):
+def print_metadata(meta: Metadata) -> None:
+    """
+    Print the metadata in a nice format.
+    """
+
     def show_recursive(obj: Any, level: int = 0) -> None:
         for option, value in obj.__dict__.items():
             if option.startswith("_"):
