@@ -293,7 +293,7 @@ def main(
     if has_stdin():
         return run_stdin(args[0])
 
-    file = ".".join(args)
+    file = ".".join(args or ())
 
     iterate = [_ for _ in file.split(".") if _]
     match iterate:
