@@ -1,10 +1,9 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.12.4,<0.13"]
+build-backend = "uv_build"
 
 [project]
 name = "verysimpletransformers"
-dynamic = ["version"]
 description = 'Very Simple Transformers provides a simplified interface for packaging, deploying, and serving Transformer models. It uses a custom .vst file format, CLI, and Python library to make sharing and using pretrained models easy.'
 readme = "README.md"
 requires-python = "<3.13"
@@ -34,6 +33,7 @@ dependencies = [
     "yarl",
     "plumbum",
 ]
+version = "0.4.2"
 
 [project.optional-dependencies]
 
@@ -42,8 +42,6 @@ drive = [
 ]
 
 dev = [
-    "hatch",
-    "python-semantic-release<8",
     "su6[all]",
     "types-requests",
 ]
@@ -54,17 +52,51 @@ Documentation = "https://github.com/trialandsuccess/verysimpletransformers#readm
 Issues = "https://github.com/trialandsuccess/verysimpletransformers/issues"
 Source = "https://github.com/trialandsuccess/verysimpletransformers"
 
-[tool.hatch.version]
-path = "src/verysimpletransformers/__about__.py"
+[tool.vommit]
+allow_breaking_bang = true
+allow_breaking_footer = true
+prerelease_token = "beta"
+confirm = true
+ignore = []
 
-[tool.semantic_release]
+[tool.vommit.git]
+enabled = true
+origin = "origin"
 branch = "master"
-version_variable = "src/verysimpletransformers/__about__.py:__version__"
-change_log = "CHANGELOG.md"
-upload_to_repository = false
-upload_to_release = false
-build_command = "hatch build"
+on_wrong_branch = "error"
+tag_format = "v{version}"
+commit_format = "{version}"
 
+[tool.vommit.changelog]
+enabled = true
+file = "CHANGELOG.md"
+include_prereleases = false
+placeholder = "<!--next-version-placeholder-->"
+placeholder_regex = "<auto>"
+entry_title_format = "## v{version} ({date:%Y-%m-%d})"
+
+[tool.vommit.changelog.levels]
+feat = "Feature{s}"
+fix = "Fix{es}"
+break = "Breaking Change{s}"
+docs = "Documentation"
+perf = "Performance"
+
+[tool.vommit.pypi]
+enabled = true
+use_keyring = true
+
+[tool.vommit.commands]
+clean = "rm -rf ./dist"
+build = "uv build"
+publish = "uv publish"
+post_publish = ""
+
+[tool.vommit.version_bump_map]
+break = "major"
+feat = "minor"
+fix = "patch"
+perf = "patch"
 
 [project.scripts]
 verysimpletransformers = "verysimpletransformers.cli:app"
