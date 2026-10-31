@@ -2,4 +2,6 @@
 This file stores the package version.
 """
 
-__version__ = "0.4.2"
+from importlib.metadata import version
+
+__version__ = version("verysimpletransformers")
